@@ -85,13 +85,13 @@ export default function ContactPage() {
   return (
     <PublicShell>
       <section className="mx-auto w-full max-w-4xl space-y-4 px-1 text-center sm:px-0">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:tracking-[0.3em]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300 sm:text-cyan-300 sm:tracking-[0.3em]">
           {content.eyebrow}
         </p>
-        <h1 className="bidi-safe text-balance text-[1.8rem] font-black leading-tight tracking-tight text-white min-[390px]:text-3xl sm:text-4xl lg:text-5xl">
+        <h1 className="bidi-safe text-balance text-[1.8rem] font-black leading-tight tracking-tight text-slate-950 dark:text-white min-[390px]:text-3xl sm:text-4xl sm:text-white lg:text-5xl">
           {content.title}
         </h1>
-        <p className="bidi-safe mx-auto max-w-3xl text-sm leading-7 text-slate-300 min-[390px]:text-base sm:text-lg sm:leading-8">
+        <p className="bidi-safe mx-auto max-w-3xl text-sm leading-7 text-slate-600 dark:text-slate-300 min-[390px]:text-base sm:text-lg sm:leading-8 sm:text-slate-300">
           {content.subtitle}
         </p>
       </section>
