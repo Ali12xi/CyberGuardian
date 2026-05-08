@@ -59,7 +59,7 @@ export default function UrlInput({
 
   return (
     <form
-      className="rounded-3xl border border-cyan-400/20 bg-white/80 p-5 shadow-2xl shadow-cyan-950/10 backdrop-blur transition dark:bg-slate-950/80 dark:shadow-cyan-500/5"
+      className="w-full rounded-3xl border border-cyan-400/20 bg-white/80 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur transition dark:bg-slate-950/80 dark:shadow-cyan-500/5 min-[390px]:p-5"
       onSubmit={handleSubmit}
     >
       <label
@@ -68,9 +68,9 @@ export default function UrlInput({
       >
         {t.urlLabel}
       </label>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="flex min-w-0 flex-col gap-3 md:flex-row">
         <input
-          className="min-h-12 flex-1 rounded-2xl border border-slate-300 bg-transparent px-4 text-slate-950 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:text-white"
+          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-300 bg-transparent px-4 text-sm text-slate-950 outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:text-white min-[390px]:text-base"
           id="url"
           name="url"
           onChange={(event) => setUrl(event.target.value)}
@@ -81,7 +81,7 @@ export default function UrlInput({
           disabled={loading}
         />
         <button
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70"
+          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
           type="submit"
           disabled={loading}
         >
@@ -97,7 +97,7 @@ export default function UrlInput({
       </div>
       {error ? (
         <div
-          className="mt-4 rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-700 transition dark:text-red-200"
+          className="bidi-safe mt-4 overflow-hidden rounded-2xl border border-red-400/30 bg-red-500/10 p-4 text-start text-sm leading-7 text-red-700 transition dark:text-red-200"
           role="alert"
         >
           <p>{error}</p>

@@ -82,11 +82,11 @@ const CONTENT = {
 
 function TextCard({ title, body }: { title: string; body: string }) {
   return (
-    <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 shadow-2xl shadow-cyan-500/5 sm:p-7">
-      <h2 className="bidi-safe text-start text-2xl font-bold tracking-tight text-white">
+    <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:p-7">
+      <h2 className="bidi-safe break-words text-start text-xl font-bold tracking-tight text-white min-[390px]:text-2xl">
         {title}
       </h2>
-      <p className="bidi-safe mt-4 text-start text-sm leading-8 text-slate-300 sm:text-base">
+      <p className="bidi-safe mt-4 overflow-hidden break-words text-start text-sm leading-8 text-slate-300 sm:text-base">
         {body}
       </p>
     </article>
@@ -99,31 +99,31 @@ export default function AboutPage() {
 
   return (
     <PublicShell>
-      <section className="mx-auto max-w-4xl space-y-4 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
+      <section className="mx-auto w-full max-w-4xl space-y-4 px-1 text-center sm:px-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:tracking-[0.3em]">
           {content.eyebrow}
         </p>
-        <h1 className="bidi-safe text-balance text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="bidi-safe text-balance text-[1.8rem] font-black leading-tight tracking-tight text-white min-[390px]:text-3xl sm:text-4xl lg:text-5xl">
           {content.title}
         </h1>
-        <p className="bidi-safe mx-auto max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
+        <p className="bidi-safe mx-auto max-w-3xl text-sm leading-7 text-slate-300 min-[390px]:text-base sm:text-lg sm:leading-8">
           {content.subtitle}
         </p>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid min-w-0 gap-5 lg:grid-cols-2">
         <TextCard body={content.mission} title={content.missionTitle} />
         <TextCard body={content.philosophy} title={content.philosophyTitle} />
       </section>
 
-      <section className="rounded-[2rem] border border-cyan-400/20 bg-slate-950/90 p-5 shadow-2xl shadow-cyan-500/10 sm:p-7">
-        <h2 className="bidi-safe text-start text-2xl font-bold text-white">
+      <section className="min-w-0 rounded-[2rem] border border-cyan-400/20 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/10 min-[390px]:p-5 sm:p-7">
+        <h2 className="bidi-safe break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
           {content.doesTitle}
         </h2>
-        <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2">
           {content.does.map((item) => (
             <div
-              className="bidi-safe rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm leading-7 text-slate-300"
+              className="bidi-safe min-w-0 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm leading-7 text-slate-300"
               key={item}
             >
               {item}
@@ -132,15 +132,15 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 sm:p-7">
-          <h2 className="bidi-safe text-start text-2xl font-bold text-white">
+      <section className="grid min-w-0 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+        <div className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 sm:p-7">
+          <h2 className="bidi-safe break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
             {content.capabilitiesTitle}
           </h2>
           <div className="mt-5 flex flex-wrap gap-2">
             {content.capabilities.map((capability) => (
               <span
-                className="bidi-safe rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-sm font-semibold leading-6 text-cyan-100"
+                className="bidi-safe max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold leading-6 text-cyan-100 min-[390px]:px-4"
                 key={capability}
               >
                 {capability}

@@ -223,13 +223,13 @@ function ScanTimeline({
   ];
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 shadow-2xl shadow-cyan-500/5">
+    <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div className={direction === "rtl" ? "text-right" : "text-left"}>
-          <p className="text-xs uppercase tracking-[0.25em] text-cyan-300">
+        <div className={`min-w-0 ${direction === "rtl" ? "text-right" : "text-left"}`}>
+          <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
             {t.liveScanTimeline}
           </p>
-          <h3 className="mt-2 text-xl font-semibold text-white">
+          <h3 className="bidi-safe mt-2 break-words text-xl font-semibold text-white">
             {t.deterministicPipeline}
           </h3>
         </div>
@@ -238,10 +238,10 @@ function ScanTimeline({
         </p>
       </div>
 
-      <div className="mt-5 grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {stages.map((stage, index) => (
           <div
-            className="group flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
             key={stage}
           >
             <span
@@ -250,7 +250,7 @@ function ScanTimeline({
             >
               {stage === t.stages.aiProgress ? "..." : "✓"}
             </span>
-            <span className="bidi-safe min-w-0 text-sm leading-6 text-slate-200">
+            <span className="bidi-safe min-w-0 overflow-hidden break-words text-sm leading-6 text-slate-200">
               {stage}
             </span>
           </div>
@@ -272,29 +272,29 @@ function ThreatBanner({
 
   return (
     <section
-      className={`relative overflow-hidden rounded-[2.5rem] border ${theme.border} bg-gradient-to-br ${theme.gradient} p-5 text-white shadow-2xl ${theme.glow} sm:p-6 md:p-8`}
+      className={`relative overflow-hidden rounded-[2.5rem] border ${theme.border} bg-gradient-to-br ${theme.gradient} p-4 text-white shadow-2xl ${theme.glow} min-[390px]:p-5 sm:p-6 md:p-8`}
     >
       <div className="absolute end-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
       <div className="absolute bottom-[-10rem] start-[-6rem] h-72 w-72 rounded-full bg-fuchsia-400/10 blur-3xl" />
 
-      <div className="relative grid gap-6 sm:gap-8 xl:grid-cols-[1.4fr_0.6fr] xl:items-center">
-        <div className="text-start">
+      <div className="relative grid min-w-0 gap-6 sm:gap-8 xl:grid-cols-[1.4fr_0.6fr] xl:items-center">
+        <div className="min-w-0 text-start">
           <div className="flex flex-wrap items-center gap-3">
             <span className={`h-3 w-3 animate-pulse rounded-full ${theme.pulse}`} />
             <span
-              className={`rounded-full border px-4 py-1.5 text-xs font-bold uppercase tracking-[0.25em] ${theme.badge}`}
+              className={`bidi-safe max-w-full rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase leading-5 tracking-[0.16em] min-[390px]:px-4 min-[390px]:text-xs sm:tracking-[0.25em] ${theme.badge}`}
             >
               {getThreatDetected(result.threatLevel, t)}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs text-slate-300">
+            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 min-[390px]:px-4">
               {t.grade} {result.grade}
             </span>
           </div>
 
-          <h2 className={`mt-5 text-3xl font-black tracking-tight min-[390px]:text-4xl md:mt-6 md:text-6xl ${theme.text}`}>
+          <h2 className={`mt-5 break-words text-[2rem] font-black leading-tight tracking-tight min-[390px]:text-4xl md:mt-6 md:text-6xl ${theme.text}`}>
             {getThreatLabel(result.threatLevel, t)}
           </h2>
-          <p className="bidi-safe mt-4 max-w-4xl text-start text-lg leading-8 text-slate-100 md:text-xl">
+          <p className="bidi-safe mt-4 max-w-4xl overflow-hidden break-words text-start text-base leading-8 text-slate-100 md:text-xl">
             {getExecutiveLine(result, explanation, language, t)}
           </p>
           <p className="mt-3 max-w-full break-all text-left text-sm leading-6 text-slate-400" dir="ltr">
@@ -302,7 +302,7 @@ function ThreatBanner({
           </p>
         </div>
 
-        <div className="grid min-w-0 gap-3 sm:grid-cols-3 xl:grid-cols-1">
+        <div className="grid min-w-0 gap-3 md:grid-cols-3 xl:grid-cols-1">
           <MetricCard label={t.confidence} value={`${result.confidence}%`}>
             <div className="mt-3 h-2 rounded-full bg-white/10">
               <div
@@ -385,35 +385,35 @@ function AIExplanationCard({
 
   return (
     <section
-      className={`rounded-[2rem] border ${theme.border} bg-slate-950/90 p-5 text-white shadow-2xl ${theme.glow} md:p-7`}
+      className={`rounded-[2rem] border ${theme.border} bg-slate-950/90 p-4 text-white shadow-2xl ${theme.glow} min-[390px]:p-5 md:p-7`}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="text-start">
-          <p className="text-xs uppercase tracking-[0.3em] text-fuchsia-300">
+        <div className="min-w-0 text-start">
+          <p className="text-xs uppercase tracking-[0.2em] text-fuchsia-300 sm:tracking-[0.3em]">
             {t.aiSummary}
           </p>
-          <h3 className="mt-3 text-2xl font-bold tracking-tight md:text-3xl">
+          <h3 className="bidi-safe mt-3 break-words text-xl font-bold tracking-tight min-[390px]:text-2xl md:text-3xl">
             {t.executiveBrief}
           </h3>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+          <p className="bidi-safe mt-2 max-w-3xl overflow-hidden break-words text-sm leading-7 text-slate-400">
             {t.aiDescription}
           </p>
         </div>
 
         <div
-          className={`flex flex-wrap gap-2 ${direction === "rtl" ? "lg:justify-start" : "lg:justify-end"}`}
+          className={`flex min-w-0 flex-wrap gap-2 ${direction === "rtl" ? "lg:justify-start" : "lg:justify-end"}`}
         >
-          <span className={`inline-flex min-h-8 max-w-full items-center rounded-full border px-3 py-1.5 text-xs leading-5 ${theme.badge}`}>
+          <span className={`bidi-safe inline-flex min-h-8 max-w-full items-center rounded-full border px-3 py-1.5 text-xs leading-5 ${theme.badge}`}>
             {getThreatLabel(result.threatLevel, t)} {t.risk}
           </span>
-          <span className={`inline-flex min-h-8 max-w-full items-center rounded-full border px-3 py-1.5 text-xs leading-5 ${trust.className}`}>
+          <span className={`bidi-safe inline-flex min-h-8 max-w-full items-center rounded-full border px-3 py-1.5 text-xs leading-5 ${trust.className}`}>
             {trust.label}
           </span>
         </div>
       </div>
 
       {loading ? (
-        <div className="mt-6 grid items-start gap-3 md:grid-cols-3">
+        <div className="mt-6 grid min-w-0 items-start gap-3 lg:grid-cols-3">
           {t.aiStages.map((stage, index) => (
             <div
               className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4"
@@ -443,18 +443,18 @@ function AIExplanationCard({
         <div className="mt-6 space-y-4">
           {sections.map((section, index) => (
             <details
-              className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06]"
+              className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5"
               key={section.title}
               open={index === 0}
             >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-start text-lg font-semibold text-white">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-start text-base font-semibold text-white min-[390px]:gap-4 sm:text-lg">
                 <span className="bidi-safe min-w-0">{section.title}</span>
                 <span className="shrink-0 text-sm text-cyan-200 transition group-open:rotate-45">
                   +
                 </span>
               </summary>
               <p
-                className="bidi-safe mt-4 overflow-hidden text-start text-sm leading-8 text-slate-300"
+                className="bidi-safe mt-4 overflow-hidden break-words text-start text-sm leading-8 text-slate-300"
                 dir={direction}
               >
                 {section.content}
@@ -462,8 +462,8 @@ function AIExplanationCard({
             </details>
           ))}
 
-          <details className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-5 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06]" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-start text-lg font-semibold text-white">
+          <details className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5" open>
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-start text-base font-semibold text-white min-[390px]:gap-4 sm:text-lg">
               <span className="bidi-safe min-w-0">{t.recommendedSecurityActions}</span>
               <span className="shrink-0 text-sm text-cyan-200 transition group-open:rotate-45">
                 +
@@ -471,7 +471,7 @@ function AIExplanationCard({
             </summary>
             <ul className="mt-4 space-y-3 text-start text-sm leading-7 text-slate-300">
               {selectedExplanation.recommendedSecurityActions.map((recommendation) => (
-                <li className="bidi-safe overflow-hidden rounded-xl bg-white/[0.04] p-4" key={recommendation}>
+                <li className="bidi-safe overflow-hidden break-words rounded-xl bg-white/[0.04] p-4" key={recommendation}>
                   {recommendation}
                 </li>
               ))}
@@ -490,11 +490,11 @@ function CriticalFindings({ result }: { result: ScanResult }) {
   return (
     <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-red-500/5 sm:p-5 md:p-7">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div className="text-start">
-          <p className="text-xs uppercase tracking-[0.25em] text-red-300">
+        <div className="min-w-0 text-start">
+          <p className="text-xs uppercase tracking-[0.18em] text-red-300 sm:tracking-[0.25em]">
             {t.criticalFindings}
           </p>
-          <h3 className="mt-2 text-2xl font-bold text-white">
+          <h3 className="bidi-safe mt-2 break-words text-xl font-bold text-white min-[390px]:text-2xl">
             {t.priorityRemediationQueue}
           </h3>
         </div>
@@ -503,7 +503,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
         </span>
       </div>
 
-      <div className="mt-5 grid items-start gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {findings.length > 0 ? (
           findings.map((finding, index) => (
             <div
@@ -514,14 +514,14 @@ function CriticalFindings({ result }: { result: ScanResult }) {
                 <SeverityBadge severity={finding.severity} />
               </div>
               <p
-                className="bidi-safe mt-4 w-full overflow-hidden text-start text-sm leading-7 text-slate-200"
+                className="bidi-safe mt-4 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-200"
                 dir={language === "ar" ? "rtl" : "ltr"}
               >
                 {finding.message[language]}
               </p>
               {finding.impact ? (
                 <p
-                  className="bidi-safe mt-3 w-full overflow-hidden text-start text-xs leading-6 text-slate-400"
+                  className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-400"
                   dir={language === "ar" ? "rtl" : "ltr"}
                 >
                   {finding.impact[language]}
@@ -530,7 +530,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
             </div>
           ))
         ) : (
-          <div className="bidi-safe rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-5 text-start text-sm leading-7 text-emerald-100 lg:col-span-3">
+          <div className="bidi-safe rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-start text-sm leading-7 text-emerald-100 min-[390px]:p-5 lg:col-span-2 xl:col-span-3">
             {t.noHighPriorityFindings}
           </div>
         )}
@@ -552,15 +552,15 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
   ];
 
   return (
-    <section className="grid items-start gap-5 xl:grid-cols-[1fr_0.9fr]">
+    <section className="grid min-w-0 items-start gap-5 xl:grid-cols-[1fr_0.9fr]">
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 sm:p-5 md:p-7">
-        <p className="text-start text-xs uppercase tracking-[0.25em] text-cyan-300">
+        <p className="text-start text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
           {t.domainIntelligence}
         </p>
-        <h3 className="mt-2 text-start text-2xl font-bold text-white">
+        <h3 className="bidi-safe mt-2 break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
           {t.reputationSignals}
         </h3>
-        <dl className="mt-5 grid items-start gap-3 sm:grid-cols-2">
+        <dl className="mt-5 grid min-w-0 items-start gap-3 md:grid-cols-2">
           {domainRows.map(([label, value]) => (
             <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start sm:p-5" key={label}>
               <dt className="bidi-safe text-start text-xs uppercase leading-5 tracking-[0.16em] text-slate-500">
@@ -573,13 +573,13 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
           ))}
         </dl>
         {result.intelligence.phishingKeywords.length > 0 ? (
-          <p className="bidi-safe mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/10 p-5 text-start text-sm leading-7 text-amber-100">
+          <p className="bidi-safe mt-4 overflow-hidden break-words rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-start text-sm leading-7 text-amber-100 min-[390px]:p-5">
             {t.phishingKeywords}: {result.intelligence.phishingKeywords.join(", ")}
           </p>
         ) : null}
         {reputationBadge ? (
-          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-5 text-start">
-            <span className="bidi-safe inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold leading-5 text-cyan-100">
+          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4 text-start min-[390px]:p-5">
+            <span className="bidi-safe inline-flex max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold leading-5 text-cyan-100">
               {reputationBadge}
             </span>
             <p className="bidi-safe mt-3 text-xs leading-6 text-slate-400">
@@ -592,17 +592,17 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 sm:p-5 md:p-7">
-        <p className="text-start text-xs uppercase tracking-[0.25em] text-cyan-300">
+        <p className="text-start text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
           {t.infrastructure}
         </p>
-        <h3 className="mt-2 text-start text-2xl font-bold text-white">
+        <h3 className="bidi-safe mt-2 break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
           {t.technologyFingerprint}
         </h3>
         {result.technologies.length > 0 ? (
           <div className="mt-5 flex flex-wrap gap-2">
             {result.technologies.map((technology) => (
               <span
-                className="inline-flex min-h-9 items-center rounded-full border border-cyan-400/30 bg-cyan-400/10 px-4 py-2 text-sm leading-none text-cyan-100"
+                className="inline-flex min-h-9 max-w-full items-center break-all rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-sm leading-5 text-cyan-100 min-[390px]:px-4"
                 key={technology}
                 dir="ltr"
               >
@@ -613,7 +613,7 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         ) : (
           <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-400">{t.noFingerprint}</p>
         )}
-        <p className="bidi-safe mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-start text-sm leading-7 text-slate-300">
+        <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm leading-7 text-slate-300 min-[390px]:p-5">
           {t.server}: {result.meta.server || t.notDisclosed}
         </p>
       </div>
@@ -638,13 +638,13 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
   ];
 
   return (
-    <section className="grid items-start gap-5 xl:grid-cols-2">
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 md:p-7">
-        <h3 className="text-start text-xl font-bold text-white">{t.tlsAndRedirects}</h3>
-        <div className="mt-5 grid items-start gap-5 lg:grid-cols-2">
+    <section className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 md:p-7">
+        <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.tlsAndRedirects}</h3>
+        <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-2">
           <dl className="space-y-3 text-sm text-slate-300">
             {tlsRows.map(([label, value]) => (
-              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] items-start gap-4" key={label}>
+              <div className="grid min-w-0 grid-cols-1 items-start gap-1 min-[390px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] min-[390px]:gap-4" key={label}>
                 <dt className="bidi-safe min-w-0 text-start leading-6 text-slate-500">
                   {label}
                 </dt>
@@ -674,9 +674,9 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 md:p-7">
-        <h3 className="text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
-        <div className="mt-5 grid items-start gap-2 sm:grid-cols-2">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 md:p-7">
+        <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
+        <div className="mt-5 grid min-w-0 items-start gap-2 md:grid-cols-2">
           {presentHeaders.map(([header, present]) => (
             <div
               className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm"
@@ -741,9 +741,9 @@ export default function ReportCard({
 
   if (loading) {
     return (
-      <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-6 text-center shadow-2xl shadow-cyan-500/10 transition sm:p-10">
+      <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-5 text-center shadow-2xl shadow-cyan-500/10 transition min-[390px]:p-6 sm:p-10">
         <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-cyan-400/30 border-t-cyan-300" />
-        <h2 className="bidi-safe mt-5 text-2xl font-semibold text-white">
+        <h2 className="bidi-safe mt-5 text-xl font-semibold text-white min-[390px]:text-2xl">
           {t.scanningTarget}
         </h2>
         <p className="bidi-safe mt-2 leading-7 text-slate-400">
@@ -755,8 +755,8 @@ export default function ReportCard({
 
   if (!result) {
     return (
-      <section className="rounded-[2.5rem] border border-dashed border-cyan-400/30 bg-white/60 p-6 text-center transition dark:bg-slate-950/60 sm:p-10">
-        <h2 className="bidi-safe text-2xl font-semibold text-slate-950 dark:text-white">
+      <section className="rounded-[2.5rem] border border-dashed border-cyan-400/30 bg-white/60 p-5 text-center transition dark:bg-slate-950/60 min-[390px]:p-6 sm:p-10">
+        <h2 className="bidi-safe text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
           {t.reportEmptyTitle}
         </h2>
         <p className="bidi-safe mt-3 leading-7 text-slate-600 dark:text-slate-300">
@@ -767,15 +767,15 @@ export default function ReportCard({
   }
 
   return (
-    <section className="space-y-6 sm:space-y-8">
+    <section className="w-full min-w-0 space-y-6 sm:space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {exported ? (
-          <div className="bidi-safe rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-emerald-200 shadow-lg shadow-emerald-500/10">
+          <div className="bidi-safe max-w-full overflow-hidden break-words rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-emerald-200 shadow-lg shadow-emerald-500/10">
             {t.reportExportedSuccessfully}
           </div>
         ) : null}
         {exportError ? (
-          <div className="bidi-safe rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-amber-100 shadow-lg shadow-amber-500/10">
+          <div className="bidi-safe max-w-full overflow-hidden break-words rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-amber-100 shadow-lg shadow-amber-500/10">
             {t.exportFailed}
           </div>
         ) : null}

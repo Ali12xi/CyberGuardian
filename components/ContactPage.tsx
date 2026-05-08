@@ -59,15 +59,15 @@ function ContactLink({
   action: string;
 }) {
   return (
-    <article className="rounded-[2rem] border border-cyan-400/20 bg-slate-950/90 p-5 shadow-2xl shadow-cyan-500/10 sm:p-7">
-      <p className="bidi-safe text-start text-xs font-semibold uppercase tracking-[0.25em] text-cyan-300">
+    <article className="min-w-0 rounded-[2rem] border border-cyan-400/20 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/10 min-[390px]:p-5 sm:p-7">
+      <p className="bidi-safe text-start text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
         {label}
       </p>
-      <p className="mt-4 break-all text-start text-lg font-bold leading-8 text-white" dir="ltr">
+      <p className="mt-4 break-all text-start text-base font-bold leading-8 text-white min-[390px]:text-lg" dir="ltr">
         {value}
       </p>
       <a
-        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-400 px-5 text-sm font-bold text-slate-950 shadow-2xl shadow-cyan-500/20 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+        className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-2xl border border-cyan-300/30 bg-cyan-400 px-5 text-sm font-bold text-slate-950 shadow-2xl shadow-cyan-500/20 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/60 sm:w-auto"
         href={href}
         rel={href.startsWith("http") ? "noreferrer" : undefined}
         target={href.startsWith("http") ? "_blank" : undefined}
@@ -84,37 +84,37 @@ export default function ContactPage() {
 
   return (
     <PublicShell>
-      <section className="mx-auto max-w-4xl space-y-4 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">
+      <section className="mx-auto w-full max-w-4xl space-y-4 px-1 text-center sm:px-0">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300 sm:tracking-[0.3em]">
           {content.eyebrow}
         </p>
-        <h1 className="bidi-safe text-balance text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+        <h1 className="bidi-safe text-balance text-[1.8rem] font-black leading-tight tracking-tight text-white min-[390px]:text-3xl sm:text-4xl lg:text-5xl">
           {content.title}
         </h1>
-        <p className="bidi-safe mx-auto max-w-3xl text-base leading-8 text-slate-300 sm:text-lg">
+        <p className="bidi-safe mx-auto max-w-3xl text-sm leading-7 text-slate-300 min-[390px]:text-base sm:text-lg sm:leading-8">
           {content.subtitle}
         </p>
       </section>
 
-      <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <article className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-5 shadow-2xl shadow-cyan-500/5 sm:p-7">
-          <p className="bidi-safe text-start text-base leading-8 text-slate-300">
+      <section className="grid min-w-0 gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+        <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:p-7">
+          <p className="bidi-safe overflow-hidden break-words text-start text-sm leading-8 text-slate-300 min-[390px]:text-base">
             {content.intro}
           </p>
           <div className="mt-6 grid gap-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <h2 className="bidi-safe text-start text-lg font-bold text-white">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <h2 className="bidi-safe break-words text-start text-lg font-bold text-white">
                 {content.collaborationTitle}
               </h2>
-              <p className="bidi-safe mt-3 text-start text-sm leading-7 text-slate-400">
+              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-400">
                 {content.collaboration}
               </p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-              <h2 className="bidi-safe text-start text-lg font-bold text-white">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+              <h2 className="bidi-safe break-words text-start text-lg font-bold text-white">
                 {content.researchTitle}
               </h2>
-              <p className="bidi-safe mt-3 text-start text-sm leading-7 text-slate-400">
+              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-400">
                 {content.research}
               </p>
             </div>

@@ -45,7 +45,7 @@ function ScanProgress({
       }`}
       dir={direction}
     >
-      <div className="grid gap-2.5 sm:gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid min-w-0 gap-2.5 sm:gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {steps.map((step, index) => {
           const completed = index < currentStep;
           const active = index === currentStep;
@@ -70,7 +70,7 @@ function ScanProgress({
                   <span className="h-2 w-2 rounded-full bg-slate-500" />
                 )}
               </span>
-              <span className="bidi-safe min-w-0 text-sm font-semibold leading-6">
+              <span className="bidi-safe min-w-0 overflow-hidden break-words text-sm font-semibold leading-6">
                 {step}
               </span>
             </div>
@@ -176,7 +176,7 @@ export default function AnalyzePanel() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full min-w-0 space-y-5 sm:space-y-6">
       <UrlInput
         onLoadingChange={handleLoadingChange}
         onScanComplete={handleScanComplete}
