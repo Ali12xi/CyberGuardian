@@ -274,8 +274,8 @@ function ThreatBanner({
     <section
       className={`relative overflow-hidden rounded-[2.5rem] border ${theme.border} bg-gradient-to-br ${theme.gradient} p-4 text-white shadow-2xl ${theme.glow} min-[390px]:p-5 sm:p-6 md:p-8`}
     >
-      <div className="absolute end-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-cyan-300/[0.06] blur-3xl sm:bg-cyan-300/10" />
-      <div className="absolute bottom-[-10rem] start-[-6rem] h-72 w-72 rounded-full bg-fuchsia-400/[0.06] blur-3xl sm:bg-fuchsia-400/10" />
+      <div className="absolute end-[-8rem] top-[-8rem] h-56 w-56 rounded-full bg-cyan-300/[0.025] blur-xl sm:bg-cyan-300/[0.04] sm:blur-2xl md:h-72 md:w-72 md:bg-cyan-300/10 md:blur-3xl" />
+      <div className="absolute bottom-[-10rem] start-[-6rem] h-56 w-56 rounded-full bg-fuchsia-400/[0.02] blur-xl sm:bg-fuchsia-400/[0.04] sm:blur-2xl md:h-72 md:w-72 md:bg-fuchsia-400/10 md:blur-3xl" />
 
       <div className="relative grid min-w-0 gap-6 sm:gap-8 xl:grid-cols-[1.4fr_0.6fr] xl:items-center">
         <div className="min-w-0 text-start">
