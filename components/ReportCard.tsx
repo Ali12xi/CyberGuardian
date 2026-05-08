@@ -26,7 +26,8 @@ function threatTheme(threatLevel: string) {
       border: "border-emerald-400/30",
       text: "text-emerald-300",
       badge: "border-emerald-300/30 bg-emerald-400/10 text-emerald-100",
-      gradient: "from-emerald-500/20 via-cyan-500/10 to-slate-950",
+      gradient:
+        "from-emerald-950/80 via-slate-950 to-slate-950 md:from-emerald-500/20 md:via-cyan-500/10",
       pulse: "bg-emerald-300",
     };
   }
@@ -37,7 +38,8 @@ function threatTheme(threatLevel: string) {
       border: "border-amber-300/30",
       text: "text-amber-200",
       badge: "border-amber-300/30 bg-amber-300/10 text-amber-100",
-      gradient: "from-amber-500/20 via-cyan-500/10 to-slate-950",
+      gradient:
+        "from-amber-950/80 via-slate-950 to-slate-950 md:from-amber-500/20 md:via-cyan-500/10",
       pulse: "bg-amber-300",
     };
   }
@@ -47,7 +49,8 @@ function threatTheme(threatLevel: string) {
     border: "border-red-400/40",
     text: "text-red-300",
     badge: "border-red-300/30 bg-red-400/10 text-red-100",
-    gradient: "from-red-500/25 via-fuchsia-500/10 to-slate-950",
+    gradient:
+      "from-red-950/80 via-slate-950 to-slate-950 md:from-red-500/25 md:via-fuchsia-500/10",
     pulse: "bg-red-300",
   };
 }
