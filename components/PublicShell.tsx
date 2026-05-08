@@ -40,7 +40,7 @@ export default function PublicShell({ children }: { children: React.ReactNode })
         </Link>
 
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
-          <div className="flex min-w-0 max-w-full rounded-2xl border border-slate-200 bg-white/60 p-1 text-xs font-semibold shadow-sm dark:border-white/10 dark:bg-slate-950/60">
+          <div className="flex min-w-0 max-w-full rounded-2xl border border-slate-200 bg-white/80 p-1 text-xs font-semibold shadow-sm dark:border-white/10 dark:bg-slate-950/85 sm:bg-white/60 sm:dark:bg-slate-950/60">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href;
 
@@ -65,12 +65,12 @@ export default function PublicShell({ children }: { children: React.ReactNode })
 
       {children}
 
-      <footer className="mt-auto px-2 pb-2 pt-6 text-center text-xs text-slate-500 dark:text-slate-500">
+      <footer className="mt-auto px-2 pb-2 pt-6 text-center text-xs text-slate-500 dark:text-slate-400 sm:dark:text-slate-500">
         <div className="mx-auto mb-4 h-px max-w-xl overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
           <div className="h-full w-1/2 animate-pulse bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
         </div>
         <div className="flex flex-col items-center justify-center gap-2 sm:flex-row sm:gap-4">
-          <span className="font-semibold text-slate-600 dark:text-slate-400">
+          <span className="font-semibold text-slate-600 dark:text-slate-300 sm:dark:text-slate-400">
             {t.footerEngineeredBy}
           </span>
           <span className="hidden h-1 w-1 rounded-full bg-cyan-400/50 sm:block" />

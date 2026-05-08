@@ -97,24 +97,24 @@ export default function ContactPage() {
       </section>
 
       <section className="grid min-w-0 gap-5 lg:grid-cols-[0.9fr_1.1fr]">
-        <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:p-7">
+        <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:bg-slate-950/80 sm:p-7">
           <p className="bidi-safe overflow-hidden break-words text-start text-sm leading-8 text-slate-300 min-[390px]:text-base">
             {content.intro}
           </p>
           <div className="mt-6 grid gap-3">
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 sm:bg-white/[0.04]">
               <h2 className="bidi-safe break-words text-start text-lg font-bold text-white">
                 {content.collaborationTitle}
               </h2>
-              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-400">
+              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-300 sm:text-slate-400">
                 {content.collaboration}
               </p>
             </div>
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 sm:bg-white/[0.04]">
               <h2 className="bidi-safe break-words text-start text-lg font-bold text-white">
                 {content.researchTitle}
               </h2>
-              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-400">
+              <p className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm leading-7 text-slate-300 sm:text-slate-400">
                 {content.research}
               </p>
             </div>

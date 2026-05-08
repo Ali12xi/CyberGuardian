@@ -59,7 +59,7 @@ export default function UrlInput({
 
   return (
     <form
-      className="w-full rounded-3xl border border-cyan-400/20 bg-white/80 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur transition dark:bg-slate-950/80 dark:shadow-cyan-500/5 min-[390px]:p-5"
+      className="w-full rounded-3xl border border-cyan-400/20 bg-white/90 p-4 shadow-2xl shadow-cyan-950/10 backdrop-blur-sm transition dark:bg-slate-950/90 dark:shadow-cyan-500/5 min-[390px]:p-5 sm:bg-white/80 sm:backdrop-blur sm:dark:bg-slate-950/80"
       onSubmit={handleSubmit}
     >
       <label

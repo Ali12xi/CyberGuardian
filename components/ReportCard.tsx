@@ -223,7 +223,7 @@ function ScanTimeline({
   ];
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5">
+    <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:bg-slate-950/80">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className={`min-w-0 ${direction === "rtl" ? "text-right" : "text-left"}`}>
           <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
@@ -233,7 +233,7 @@ function ScanTimeline({
             {t.deterministicPipeline}
           </h3>
         </div>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-slate-300 sm:text-slate-400">
           {result.meta.responseTime}ms {t.runtime}
         </p>
       </div>
@@ -241,7 +241,7 @@ function ScanTimeline({
       <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {stages.map((stage, index) => (
           <div
-            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start transition hover:border-cyan-300/30 hover:bg-cyan-300/5"
+            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start transition hover:border-cyan-300/30 hover:bg-cyan-300/5 sm:bg-white/[0.04]"
             key={stage}
           >
             <span
@@ -274,8 +274,8 @@ function ThreatBanner({
     <section
       className={`relative overflow-hidden rounded-[2.5rem] border ${theme.border} bg-gradient-to-br ${theme.gradient} p-4 text-white shadow-2xl ${theme.glow} min-[390px]:p-5 sm:p-6 md:p-8`}
     >
-      <div className="absolute end-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-cyan-300/10 blur-3xl" />
-      <div className="absolute bottom-[-10rem] start-[-6rem] h-72 w-72 rounded-full bg-fuchsia-400/10 blur-3xl" />
+      <div className="absolute end-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-cyan-300/[0.06] blur-3xl sm:bg-cyan-300/10" />
+      <div className="absolute bottom-[-10rem] start-[-6rem] h-72 w-72 rounded-full bg-fuchsia-400/[0.06] blur-3xl sm:bg-fuchsia-400/10" />
 
       <div className="relative grid min-w-0 gap-6 sm:gap-8 xl:grid-cols-[1.4fr_0.6fr] xl:items-center">
         <div className="min-w-0 text-start">
@@ -297,7 +297,7 @@ function ThreatBanner({
           <p className="bidi-safe mt-4 max-w-4xl overflow-hidden break-words text-start text-base leading-8 text-slate-100 md:text-xl">
             {getExecutiveLine(result, explanation, language, t)}
           </p>
-          <p className="mt-3 max-w-full break-all text-left text-sm leading-6 text-slate-400" dir="ltr">
+          <p className="mt-3 max-w-full break-all text-left text-sm leading-6 text-slate-300 sm:text-slate-400" dir="ltr">
             {result.meta.finalUrl}
           </p>
         </div>
@@ -341,8 +341,8 @@ function MetricCard({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 flex-col rounded-3xl border border-white/10 bg-slate-950/60 p-4 text-center sm:p-5">
-      <p className="bidi-safe min-h-5 text-center text-xs uppercase leading-5 tracking-[0.14em] text-slate-400">
+    <div className="flex min-w-0 flex-col rounded-3xl border border-white/10 bg-slate-950/80 p-4 text-center sm:bg-slate-950/60 sm:p-5">
+      <p className="bidi-safe min-h-5 text-center text-xs uppercase leading-5 tracking-[0.14em] text-slate-300 sm:text-slate-400">
         {label}
       </p>
       <p className={`bidi-safe mt-2 min-w-0 break-words text-center font-black ${valueClassName} ${className}`}>
@@ -395,7 +395,7 @@ function AIExplanationCard({
           <h3 className="bidi-safe mt-3 break-words text-xl font-bold tracking-tight min-[390px]:text-2xl md:text-3xl">
             {t.executiveBrief}
           </h3>
-          <p className="bidi-safe mt-2 max-w-3xl overflow-hidden break-words text-sm leading-7 text-slate-400">
+          <p className="bidi-safe mt-2 max-w-3xl overflow-hidden break-words text-sm leading-7 text-slate-300 sm:text-slate-400">
             {t.aiDescription}
           </p>
         </div>
@@ -416,7 +416,7 @@ function AIExplanationCard({
         <div className="mt-6 grid min-w-0 items-start gap-3 lg:grid-cols-3">
           {t.aiStages.map((stage, index) => (
             <div
-              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4"
+              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 sm:bg-white/[0.04]"
               key={stage}
             >
               <div className="flex items-center gap-3 text-start">
@@ -443,7 +443,7 @@ function AIExplanationCard({
         <div className="mt-6 space-y-4">
           {sections.map((section, index) => (
             <details
-              className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5"
+              className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5 sm:bg-white/[0.04]"
               key={section.title}
               open={index === 0}
             >
@@ -462,7 +462,7 @@ function AIExplanationCard({
             </details>
           ))}
 
-          <details className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5" open>
+          <details className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5 sm:bg-white/[0.04]" open>
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-start text-base font-semibold text-white min-[390px]:gap-4 sm:text-lg">
               <span className="bidi-safe min-w-0">{t.recommendedSecurityActions}</span>
               <span className="shrink-0 text-sm text-cyan-200 transition group-open:rotate-45">
@@ -471,7 +471,7 @@ function AIExplanationCard({
             </summary>
             <ul className="mt-4 space-y-3 text-start text-sm leading-7 text-slate-300">
               {selectedExplanation.recommendedSecurityActions.map((recommendation) => (
-                <li className="bidi-safe overflow-hidden break-words rounded-xl bg-white/[0.04] p-4" key={recommendation}>
+                <li className="bidi-safe overflow-hidden break-words rounded-xl bg-white/[0.07] p-4 sm:bg-white/[0.04]" key={recommendation}>
                   {recommendation}
                 </li>
               ))}
@@ -488,7 +488,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
   const findings = getCriticalFindings(result.findings);
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-red-500/5 sm:p-5 md:p-7">
+    <section className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-red-500/5 sm:bg-slate-950/80 sm:p-5 md:p-7">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 text-start">
           <p className="text-xs uppercase tracking-[0.18em] text-red-300 sm:tracking-[0.25em]">
@@ -507,7 +507,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
         {findings.length > 0 ? (
           findings.map((finding, index) => (
             <div
-              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm sm:p-5"
+              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm sm:bg-white/[0.04] sm:p-5"
               key={`${finding.severity}-${index}`}
             >
               <div className="flex w-full justify-start" dir={direction}>
@@ -521,7 +521,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
               </p>
               {finding.impact ? (
                 <p
-                  className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-400"
+                  className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-300 sm:text-slate-400"
                   dir={language === "ar" ? "rtl" : "ltr"}
                 >
                   {finding.impact[language]}
@@ -553,7 +553,7 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
 
   return (
     <section className="grid min-w-0 items-start gap-5 xl:grid-cols-[1fr_0.9fr]">
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 sm:p-5 md:p-7">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 sm:bg-slate-950/80 sm:p-5 md:p-7">
         <p className="text-start text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
           {t.domainIntelligence}
         </p>
@@ -562,8 +562,8 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         </h3>
         <dl className="mt-5 grid min-w-0 items-start gap-3 md:grid-cols-2">
           {domainRows.map(([label, value]) => (
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start sm:p-5" key={label}>
-              <dt className="bidi-safe text-start text-xs uppercase leading-5 tracking-[0.16em] text-slate-500">
+            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start sm:bg-white/[0.04] sm:p-5" key={label}>
+              <dt className="bidi-safe text-start text-xs uppercase leading-5 tracking-[0.16em] text-slate-400 sm:text-slate-500">
                 {label}
               </dt>
               <dd className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm font-semibold leading-6 text-slate-100">
@@ -578,11 +578,11 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
           </p>
         ) : null}
         {reputationBadge ? (
-          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4 text-start min-[390px]:p-5">
+          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.08] p-4 text-start min-[390px]:p-5 sm:bg-cyan-300/10">
             <span className="bidi-safe inline-flex max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold leading-5 text-cyan-100">
               {reputationBadge}
             </span>
-            <p className="bidi-safe mt-3 text-xs leading-6 text-slate-400">
+            <p className="bidi-safe mt-3 text-xs leading-6 text-slate-300 sm:text-slate-400">
               {language === "ar"
                 ? "نتائج السمعة هي إشارات استخباراتية وليست حكمًا نهائيًا."
                 : "Reputation results are intelligence signals, not deterministic proof."}
@@ -591,7 +591,7 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         ) : null}
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 sm:p-5 md:p-7">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 sm:bg-slate-950/80 sm:p-5 md:p-7">
         <p className="text-start text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
           {t.infrastructure}
         </p>
@@ -611,9 +611,9 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
             ))}
           </div>
         ) : (
-          <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-400">{t.noFingerprint}</p>
+          <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-300 sm:text-slate-400">{t.noFingerprint}</p>
         )}
-        <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm leading-7 text-slate-300 min-[390px]:p-5">
+        <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
           {t.server}: {result.meta.server || t.notDisclosed}
         </p>
       </div>
@@ -639,13 +639,13 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
 
   return (
     <section className="grid min-w-0 items-start gap-5 xl:grid-cols-2">
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 md:p-7">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7">
         <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.tlsAndRedirects}</h3>
         <div className="mt-5 grid min-w-0 items-start gap-5 lg:grid-cols-2">
           <dl className="space-y-3 text-sm text-slate-300">
             {tlsRows.map(([label, value]) => (
               <div className="grid min-w-0 grid-cols-1 items-start gap-1 min-[390px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] min-[390px]:gap-4" key={label}>
-                <dt className="bidi-safe min-w-0 text-start leading-6 text-slate-500">
+                <dt className="bidi-safe min-w-0 text-start leading-6 text-slate-400 sm:text-slate-500">
                   {label}
                 </dt>
                 <dd className="bidi-safe min-w-0 break-words text-end leading-6 text-slate-200">
@@ -655,14 +655,14 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
             ))}
           </dl>
           <div>
-            <p className="bidi-safe text-start text-sm leading-6 text-slate-400">
+            <p className="bidi-safe text-start text-sm leading-6 text-slate-300 sm:text-slate-400">
               {t.suspiciousRedirects}:{" "}
               {localizedBoolean(result.redirects.suspicious, t)}
             </p>
             <ol className="mt-3 max-h-56 space-y-2 overflow-auto pe-1 text-sm text-slate-300">
               {result.redirects.chain.map((step) => (
                 <li
-                  className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-3"
+                  className="min-w-0 rounded-xl border border-white/10 bg-white/[0.07] p-3 sm:bg-white/[0.04]"
                   key={`${step.statusCode}-${step.url}`}
                 >
                   <span className="font-semibold text-cyan-200" dir="ltr">{step.statusCode}</span>{" "}
@@ -674,12 +674,12 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
         </div>
       </div>
 
-      <div className="rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 md:p-7">
+      <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7">
         <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
         <div className="mt-5 grid min-w-0 items-start gap-2 md:grid-cols-2">
           {presentHeaders.map(([header, present]) => (
             <div
-              className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm"
+              className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.07] px-4 py-3 text-sm sm:bg-white/[0.04]"
               key={header}
             >
               <span className="min-w-0 break-words text-left leading-6 text-slate-300" dir="ltr">
@@ -746,7 +746,7 @@ export default function ReportCard({
         <h2 className="bidi-safe mt-5 text-xl font-semibold text-white min-[390px]:text-2xl">
           {t.scanningTarget}
         </h2>
-        <p className="bidi-safe mt-2 leading-7 text-slate-400">
+        <p className="bidi-safe mt-2 leading-7 text-slate-300 sm:text-slate-400">
           {t.scanningTargetSubtitle}
         </p>
       </section>
@@ -755,7 +755,7 @@ export default function ReportCard({
 
   if (!result) {
     return (
-      <section className="rounded-[2.5rem] border border-dashed border-cyan-400/30 bg-white/60 p-5 text-center transition dark:bg-slate-950/60 min-[390px]:p-6 sm:p-10">
+      <section className="rounded-[2.5rem] border border-dashed border-cyan-400/30 bg-white/80 p-5 text-center transition dark:bg-slate-950/80 min-[390px]:p-6 sm:bg-white/60 sm:p-10 sm:dark:bg-slate-950/60">
         <h2 className="bidi-safe text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
           {t.reportEmptyTitle}
         </h2>

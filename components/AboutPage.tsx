@@ -82,7 +82,7 @@ const CONTENT = {
 
 function TextCard({ title, body }: { title: string; body: string }) {
   return (
-    <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:p-7">
+    <article className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:bg-slate-950/80 sm:p-7">
       <h2 className="bidi-safe break-words text-start text-xl font-bold tracking-tight text-white min-[390px]:text-2xl">
         {title}
       </h2>
@@ -123,7 +123,7 @@ export default function AboutPage() {
         <div className="mt-5 grid min-w-0 gap-3 md:grid-cols-2">
           {content.does.map((item) => (
             <div
-              className="bidi-safe min-w-0 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-start text-sm leading-7 text-slate-300"
+              className="bidi-safe min-w-0 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm leading-7 text-slate-200 sm:bg-white/[0.04] sm:text-slate-300"
               key={item}
             >
               {item}
@@ -133,14 +133,14 @@ export default function AboutPage() {
       </section>
 
       <section className="grid min-w-0 gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-        <div className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/80 p-4 min-[390px]:p-5 sm:p-7">
+        <div className="min-w-0 rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 sm:p-7">
           <h2 className="bidi-safe break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
             {content.capabilitiesTitle}
           </h2>
           <div className="mt-5 flex flex-wrap gap-2">
             {content.capabilities.map((capability) => (
               <span
-                className="bidi-safe max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-2 text-sm font-semibold leading-6 text-cyan-100 min-[390px]:px-4"
+                className="bidi-safe max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/[0.08] px-3 py-2 text-sm font-semibold leading-6 text-cyan-50 min-[390px]:px-4 sm:bg-cyan-300/10 sm:text-cyan-100"
                 key={capability}
               >
                 {capability}

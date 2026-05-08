@@ -56,8 +56,8 @@ function ScanProgress({
                 completed
                   ? "border-emerald-300/30 bg-emerald-300/10 text-emerald-100"
                   : active
-                    ? "border-cyan-300/40 bg-cyan-300/10 text-cyan-100 shadow-lg shadow-cyan-500/10"
-                    : "border-white/10 bg-white/[0.04] text-slate-500"
+                    ? "border-cyan-300/40 bg-cyan-300/[0.08] text-cyan-50 shadow-lg shadow-cyan-500/10 sm:bg-cyan-300/10 sm:text-cyan-100"
+                    : "border-white/10 bg-white/[0.07] text-slate-300 sm:bg-white/[0.04] sm:text-slate-500"
               }`}
               key={step}
             >
