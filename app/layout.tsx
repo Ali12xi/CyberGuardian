@@ -15,21 +15,21 @@ const cairo = Cairo({
 
 export const metadata: Metadata = {
   title: {
-    default: "CyberGuardian — AI Cybersecurity Intelligence Platform",
-    template: "%s | CyberGuardian",
+    default: "CyberGuardian AI — Cybersecurity Intelligence Platform",
+    template: "%s | CyberGuardian AI",
   },
   description:
-    "CyberGuardian is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.",
+    "CyberGuardian AI is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.",
   openGraph: {
-    title: "CyberGuardian — AI Cybersecurity Intelligence Platform",
+    title: "CyberGuardian AI — Cybersecurity Intelligence Platform",
     description:
       "AI-powered website security scanning with cybersecurity intelligence, human-readable threat insights, and executive-grade reporting.",
-    siteName: "CyberGuardian",
+    siteName: "CyberGuardian AI",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "CyberGuardian — AI Cybersecurity Intelligence Platform",
+    title: "CyberGuardian AI — Cybersecurity Intelligence Platform",
     description:
       "Human-readable cybersecurity intelligence, AI-powered analysis, and deterministic website security scanning.",
   },

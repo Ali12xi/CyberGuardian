@@ -11,17 +11,17 @@ const CONTACT = {
 const CONTENT = {
   en: {
     eyebrow: "Contact",
-    title: "Connect with CyberGuardian.",
+    title: "Connect with CyberGuardian AI.",
     subtitle:
       "For collaboration, security research, product feedback, or technical discussion, reach out through the channels below.",
     intro:
-      "CyberGuardian welcomes thoughtful conversations with developers, researchers, organizations, and builders who care about practical cybersecurity intelligence.",
+      "CyberGuardian AI welcomes thoughtful conversations with developers, researchers, organizations, and builders who care about practical cybersecurity intelligence.",
     collaborationTitle: "Collaboration",
     collaboration:
       "Open to product feedback, responsible security research, integration ideas, and partnerships that make web security easier to understand.",
     researchTitle: "Security Research",
     research:
-      "If you are a researcher reviewing CyberGuardian or have suggestions for improving analysis quality, deterministic scoring, or bilingual reporting, your input is welcome.",
+      "If you are a researcher reviewing CyberGuardian AI or have suggestions for improving analysis quality, deterministic scoring, or bilingual reporting, your input is welcome.",
     emailLabel: "Email",
     githubLabel: "GitHub",
     emailAction: "Send email",
@@ -29,17 +29,17 @@ const CONTENT = {
   },
   ar: {
     eyebrow: "تواصل",
-    title: "تواصل مع CyberGuardian.",
+    title: "تواصل مع CyberGuardian AI.",
     subtitle:
       "للتعاون أو أبحاث الأمن أو ملاحظات المنتج أو النقاش التقني، يمكنك استخدام قنوات التواصل أدناه.",
     intro:
-      "يرحب CyberGuardian بالنقاشات الجادة مع المطورين والباحثين والمؤسسات والمهتمين ببناء استخبارات أمنية عملية ومفهومة.",
+      "يرحب CyberGuardian AI بالنقاشات الجادة مع المطورين والباحثين والمؤسسات والمهتمين ببناء استخبارات أمنية عملية ومفهومة.",
     collaborationTitle: "التعاون",
     collaboration:
       "متاح لملاحظات المنتج، وأبحاث الأمن المسؤولة، وأفكار التكامل، والشراكات التي تجعل أمن الويب أسهل فهمًا.",
     researchTitle: "أبحاث الأمن",
     research:
-      "إذا كنت باحثًا تراجع CyberGuardian أو لديك اقتراحات لتحسين جودة التحليل أو التقييم الحتمي أو التقارير ثنائية اللغة، فمساهمتك مرحب بها.",
+      "إذا كنت باحثًا تراجع CyberGuardian AI أو لديك اقتراحات لتحسين جودة التحليل أو التقييم الحتمي أو التقارير ثنائية اللغة، فمساهمتك مرحب بها.",
     emailLabel: "البريد الإلكتروني",
     githubLabel: "GitHub",
     emailAction: "إرسال بريد",

@@ -34,7 +34,7 @@ const CARD_RADIUS = 24;
 const COMPACT_GAP = 16;
 const SCANNER_ENGINE_VERSION = "v1.4";
 const INTELLIGENCE_ENGINE_VERSION = "v1.4";
-const PDF_METADATA_TITLE = "CyberGuardian Security Report";
+const PDF_METADATA_TITLE = "CyberGuardian AI Security Report";
 
 type Severity = "critical" | "high" | "medium" | "low" | "informational";
 
@@ -1476,7 +1476,7 @@ async function buildPdfFromCanvases(canvases: HTMLCanvasElement[], title: string
 
   const infoObjectId = addObject([
     encodeAscii(
-      `<< /Title (${escapePdfString(sanitizePdfInfo(PDF_METADATA_TITLE))}) /Producer (CyberGuardian) >>`,
+      `<< /Title (${escapePdfString(sanitizePdfInfo(PDF_METADATA_TITLE))}) /Producer (CyberGuardian AI) >>`,
     ),
   ]);
   const outputParts: Uint8Array[] = [
@@ -1559,12 +1559,12 @@ function getSafeReportFilename(finalUrl: string, scanTimestamp: string) {
     const date = new Date(scanTimestamp).toISOString().slice(0, 10);
 
     if (!domain || !date) {
-      return "cyberguardian-security-report.pdf";
+      return "cyberguardian-ai-security-report.pdf";
     }
 
-    return `cyberguardian-security-report-${domain}-${date}.pdf`;
+    return `cyberguardian-ai-security-report-${domain}-${date}.pdf`;
   } catch {
-    return "cyberguardian-security-report.pdf";
+    return "cyberguardian-ai-security-report.pdf";
   }
 }
 
