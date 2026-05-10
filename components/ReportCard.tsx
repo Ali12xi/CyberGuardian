@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { generateCyberGuardianPdf } from "@/lib/pdf";
+import { getRemediationById, type RemediationEntry } from "@/lib/remediation";
 import type { AIExplanation, Finding, ScanResult } from "@/lib/types";
 
 type ReportCardProps = {
@@ -11,6 +12,48 @@ type ReportCardProps = {
   explanation: AIExplanation | null;
   aiLoading: boolean;
 };
+
+type PlatformKey = keyof RemediationEntry["codeExamples"];
+
+const PLATFORM_LABELS: Record<PlatformKey, string> = {
+  vercel: "Vercel",
+  nginx: "Nginx",
+  apache: "Apache",
+  cloudflare: "Cloudflare",
+};
+
+const FIX_LABELS = {
+  en: {
+    businessImpact: "Business Impact",
+    howToFix: "How to Fix",
+    copy: "Copy",
+    copied: "Copied",
+    estimatedFixTime: "Fix time",
+    difficulty: "Difficulty",
+    riskReduction: "Risk reduction",
+    easy: "Easy",
+    medium: "Medium",
+    hard: "Hard",
+    high: "High",
+    low: "Low",
+    advisory: "Recommended action",
+  },
+  ar: {
+    businessImpact: "التأثير على الموقع",
+    howToFix: "طريقة الإصلاح",
+    copy: "نسخ",
+    copied: "تم النسخ",
+    estimatedFixTime: "وقت الإصلاح",
+    difficulty: "الصعوبة",
+    riskReduction: "تقليل الخطر",
+    easy: "سهل",
+    medium: "متوسط",
+    hard: "صعب",
+    high: "مرتفع",
+    low: "منخفض",
+    advisory: "الإجراء الموصى به",
+  },
+} as const;
 
 function formatHeaderName(header: string) {
   return header
@@ -205,6 +248,207 @@ function SeverityBadge({ severity }: { severity: Finding["severity"] }) {
     >
       {severity}
     </span>
+  );
+}
+
+function getAvailableCodeTabs(codeExamples: RemediationEntry["codeExamples"]) {
+  return (Object.keys(PLATFORM_LABELS) as PlatformKey[])
+    .map((key) => ({
+      key,
+      label: PLATFORM_LABELS[key],
+      code: codeExamples[key],
+    }))
+    .filter((tab): tab is { key: PlatformKey; label: string; code: string } =>
+      Boolean(tab.code),
+    );
+}
+
+function MetadataBadge({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="bidi-safe inline-flex min-h-8 items-center rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-3 py-1 text-[11px] font-semibold leading-5 text-cyan-100/90">
+      <span className="text-slate-400">{label}:</span>
+      <span className="ms-1 text-slate-100">{value}</span>
+    </span>
+  );
+}
+
+function FindingCard({
+  finding,
+  index,
+}: {
+  finding: Finding;
+  index: number;
+}) {
+  const { direction, language } = useLanguage();
+  const labels = FIX_LABELS[language];
+  const remediation = useMemo(
+    () => (finding.id ? getRemediationById(finding.id) : undefined),
+    [finding.id],
+  );
+  const tabs = useMemo(
+    () => (remediation ? getAvailableCodeTabs(remediation.codeExamples) : []),
+    [remediation],
+  );
+  const [activeTabKey, setActiveTabKey] = useState<PlatformKey | null>(
+    tabs[0]?.key ?? null,
+  );
+  const [copied, setCopied] = useState(false);
+  const activeTab = tabs.find((tab) => tab.key === activeTabKey) ?? tabs[0];
+
+  if (!remediation) {
+    return (
+      <div
+        className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm sm:bg-white/[0.04] sm:p-5"
+        key={`${finding.severity}-${index}`}
+      >
+        <div className="flex w-full justify-start" dir={direction}>
+          <SeverityBadge severity={finding.severity} />
+        </div>
+        <p
+          className="bidi-safe mt-4 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-200"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          {finding.message[language]}
+        </p>
+        {finding.impact ? (
+          <p
+            className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-300 sm:text-slate-400"
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            {finding.impact[language]}
+          </p>
+        ) : null}
+      </div>
+    );
+  }
+
+  async function handleCopy() {
+    if (!activeTab?.code || !navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(activeTab.code);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  return (
+    <div
+      className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm sm:bg-white/[0.04] sm:p-5"
+      key={`${finding.id ?? finding.severity}-${index}`}
+    >
+      <div className="flex min-w-0 flex-col gap-3">
+        <div className="flex w-full justify-start" dir={direction}>
+          <SeverityBadge severity={finding.severity} />
+        </div>
+        <h4
+          className="bidi-safe w-full overflow-hidden break-words text-start text-sm font-bold leading-7 text-slate-100"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          {finding.message[language]}
+        </h4>
+      </div>
+
+      <p
+        className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-300"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        {remediation.explanation.simple[language]}
+      </p>
+
+      <div className="mt-4 rounded-2xl border border-cyan-300/[0.12] bg-cyan-300/[0.045] p-3">
+        <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+          {labels.businessImpact}
+        </p>
+        <p
+          className="bidi-safe mt-2 overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          {remediation.businessImpact[language]}
+        </p>
+      </div>
+
+      <details className="group mt-4 rounded-2xl border border-white/10 bg-slate-950/50 transition open:border-cyan-300/25 open:bg-cyan-300/[0.035]">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-start text-sm font-bold text-slate-100">
+          <span className="bidi-safe min-w-0">{labels.howToFix}</span>
+          <span className="shrink-0 text-cyan-200 transition duration-200 group-open:rotate-180">
+           ⌄
+          </span>
+        </summary>
+        <div className="space-y-4 border-t border-white/10 px-3 pb-3 pt-4">
+          <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+            {labels.advisory}
+          </p>
+          <p
+            className="bidi-safe overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            {remediation.recommendation[language]}
+          </p>
+
+          {tabs.length > 0 ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {tabs.map((tab) => {
+                  const active = tab.key === activeTab?.key;
+
+                  return (
+                    <button
+                      className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                        active
+                          ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
+                          : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-cyan-300/20 hover:text-slate-200"
+                      }`}
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTabKey(tab.key)}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
+                <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
+                  <span className="text-xs font-bold text-slate-400">
+                    {activeTab?.label}
+                  </span>
+                  <button
+                    className="rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1 text-xs font-bold text-cyan-100 transition hover:bg-cyan-300/[0.1]"
+                    type="button"
+                    onClick={handleCopy}
+                  >
+                    {copied ? labels.copied : labels.copy}
+                  </button>
+                </div>
+                <pre
+                  className="max-w-full overflow-x-auto p-3 text-xs leading-6 text-slate-200"
+                  dir="ltr"
+                >
+                  <code>{activeTab?.code}</code>
+                </pre>
+              </div>
+            </>
+          ) : null}
+
+          <div className="flex flex-wrap gap-2">
+            <MetadataBadge
+              label={labels.estimatedFixTime}
+              value={remediation.estimatedFixTime[language]}
+            />
+            <MetadataBadge
+              label={labels.difficulty}
+              value={labels[remediation.difficulty]}
+            />
+            <MetadataBadge
+              label={labels.riskReduction}
+              value={labels[remediation.riskReduction]}
+            />
+          </div>
+        </div>
+      </details>
+    </div>
   );
 }
 
@@ -487,7 +731,7 @@ function AIExplanationCard({
 }
 
 function CriticalFindings({ result }: { result: ScanResult }) {
-  const { direction, language, t } = useLanguage();
+  const { t } = useLanguage();
   const findings = getCriticalFindings(result.findings);
 
   return (
@@ -509,28 +753,11 @@ function CriticalFindings({ result }: { result: ScanResult }) {
       <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {findings.length > 0 ? (
           findings.map((finding, index) => (
-            <div
-              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm sm:bg-white/[0.04] sm:p-5"
-              key={`${finding.severity}-${index}`}
-            >
-              <div className="flex w-full justify-start" dir={direction}>
-                <SeverityBadge severity={finding.severity} />
-              </div>
-              <p
-                className="bidi-safe mt-4 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-200"
-                dir={language === "ar" ? "rtl" : "ltr"}
-              >
-                {finding.message[language]}
-              </p>
-              {finding.impact ? (
-                <p
-                  className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-300 sm:text-slate-400"
-                  dir={language === "ar" ? "rtl" : "ltr"}
-                >
-                  {finding.impact[language]}
-                </p>
-              ) : null}
-            </div>
+            <FindingCard
+              finding={finding}
+              index={index}
+              key={`${finding.id ?? finding.severity}-${index}`}
+            />
           ))
         ) : (
           <div className="bidi-safe rounded-2xl border border-emerald-300/20 bg-emerald-300/10 p-4 text-start text-sm leading-7 text-emerald-100 min-[390px]:p-5 lg:col-span-2 xl:col-span-3">
@@ -758,11 +985,11 @@ export default function ReportCard({
 
   if (!result) {
     return (
-      <section className="rounded-[2.5rem] border border-dashed border-cyan-400/30 bg-white/80 p-5 text-center transition dark:bg-slate-950/80 min-[390px]:p-6 sm:bg-white/60 sm:p-10 sm:dark:bg-slate-950/60">
-        <h2 className="bidi-safe text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
+      <section className="rounded-[2rem] border border-dashed border-cyan-400/20 bg-white/75 p-5 text-center shadow-sm shadow-cyan-950/[0.02] transition dark:bg-slate-950/65 min-[390px]:p-6 sm:bg-white/55 sm:p-8 sm:dark:bg-slate-950/50">
+        <h2 className="bidi-safe text-lg font-semibold text-slate-950 dark:text-white min-[390px]:text-xl">
           {t.reportEmptyTitle}
         </h2>
-        <p className="bidi-safe mt-3 leading-7 text-slate-600 dark:text-slate-300">
+        <p className="bidi-safe mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300/85 sm:text-base">
           {t.reportEmptySubtitle}
         </p>
       </section>
@@ -771,6 +998,9 @@ export default function ReportCard({
 
   return (
     <section className="w-full min-w-0 space-y-6 sm:space-y-8">
+      <h2 className="bidi-safe text-center text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
+        {t.reportEmptyTitle}
+      </h2>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         {exported ? (
           <div className="bidi-safe max-w-full overflow-hidden break-words rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-emerald-200 shadow-lg shadow-emerald-500/10">

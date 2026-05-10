@@ -256,10 +256,10 @@ const TYPO_REPLACEMENTS: Record<string, string> = {
 };
 
 const FINDING_SCORE_DEDUCTION: Record<Severity, number> = {
-  critical: SCORE_WEIGHTS.criticalFinding,
-  high: SCORE_WEIGHTS.highFinding,
-  medium: SCORE_WEIGHTS.mediumFinding,
-  low: SCORE_WEIGHTS.lowFinding,
+  critical: 30,
+  high: 15,
+  medium: 8,
+  low: 3,
   informational: SCORE_WEIGHTS.informationalFinding,
 };
 
@@ -583,6 +583,19 @@ function isTls13OrNewer(protocol: string) {
   return major > 1 || (major === 1 && minor >= 3);
 }
 
+function isTls12OrNewer(protocol: string) {
+  const match = protocol.match(/TLSv?(\d+)\.(\d+)/i);
+
+  if (!match) {
+    return false;
+  }
+
+  const major = Number(match[1]);
+  const minor = Number(match[2]);
+
+  return major > 1 || (major === 1 && minor >= 2);
+}
+
 function hasProtectedEdgeProvider(result: ScanResult) {
   const combinedSignals = [
     result.infrastructure.cdn,
@@ -732,74 +745,415 @@ export function generateDeterministicHash(scanResult: ScanResult) {
 }
 
 function calculateConfidence(result: ScanResult) {
-  let confidence = 45;
+  let confidence = 70;
+  const stages = Object.values(result.meta.stages);
+  const hasTlsData = Boolean(result.ssl.issuer || result.ssl.protocol || result.ssl.cipher);
+  const hasHeaderData =
+    result.meta.stages.headers.status === "completed" &&
+    Object.values(result.headers).length >= SECURITY_HEADERS.length;
+  const hasInfrastructureFingerprint =
+    result.technologies.length > 0 ||
+    result.infrastructure.detections.length > 0 ||
+    Boolean(
+      result.infrastructure.cdn ||
+        result.infrastructure.waf ||
+        result.infrastructure.hostingProvider ||
+        result.infrastructure.cloudProvider ||
+        result.infrastructure.framework ||
+        result.infrastructure.reverseProxy,
+    );
+  const antiBotBlocked =
+    result.meta.statusCode === 403 ||
+    result.meta.stages.headers.reason?.includes("unable_to_verify") ||
+    result.meta.stages.headers.reason?.includes("anti_bot") ||
+    result.meta.stages.headers.reason?.includes("challenge");
+  const hasTimeoutOrPartial = stages.some(
+    (stage) => stage.status === "timeout" || stage.status === "partial",
+  );
 
-  if (result.meta.statusCode > 0) {
-    confidence += 20;
-  }
-
-  if (result.redirects.chain.length > 0) {
+  if (hasTlsData) {
     confidence += 10;
   }
 
-  if (result.ssl.issuer || result.meta.finalUrl.startsWith("http://")) {
-    confidence += 10;
+  if (hasHeaderData) {
+    confidence += 8;
   }
 
-  if (result.technologies.length > 0) {
+  if (result.reputation) {
+    confidence += 7;
+  }
+
+  if (hasInfrastructureFingerprint) {
     confidence += 5;
   }
 
-  const headerAnswers = Object.values(result.headers).length;
-
-  if (headerAnswers >= SECURITY_HEADERS.length) {
-    confidence += 10;
+  if (antiBotBlocked) {
+    confidence -= 15;
   }
 
-  const degradedStages = Object.values(result.meta.stages).reduce((total, stage) => {
-    if (stage.status === "timeout" || stage.status === "failed") {
-      return total + 12;
+  if (hasTimeoutOrPartial) {
+    confidence -= 20;
+  }
+
+  return Math.max(0, Math.min(97, Math.round(confidence)));
+}
+
+function normalizeFindingTitle(value: string) {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^\w\s\u0600-\u06FF]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return normalized
+    .replace(/\bmissing security header\b/g, " ")
+    .replace(/\btechnical issue\b/g, " ")
+    .replace(/\breview\b/g, " ")
+    .replace(/\bdetected\b/g, " ")
+    .replace(/\ba detected\b/g, " ")
+    .replace(/\bthe detected\b/g, " ")
+    .replace(/\bcross domain redirects?\b/g, "redirect")
+    .replace(/\bcross domain flows?\b/g, "redirect")
+    .replace(/\bredirect chains?\b/g, "redirect")
+    .replace(/\bredirects? detected\b/g, "redirect")
+    .replace(/\bunexpected redirects?\b/g, "redirect")
+    .replace(/\bsuspicious redirects?\b/g, "redirect")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getFindingDedupeKey(finding: Finding) {
+  const combinedText = [
+    finding.id ?? "",
+    finding.message.en,
+    finding.impact?.en ?? "",
+    finding.remediation?.en ?? "",
+  ].join(" ");
+  const normalizedText = normalizeFindingTitle(combinedText);
+
+  if (
+    /\bredirect\b/.test(normalizedText) ||
+    /\bcross domain\b/.test(normalizedText)
+  ) {
+    return "root:redirect";
+  }
+
+  if (normalizedText.includes("content security policy") || normalizedText.includes("csp")) {
+    return "root:content-security-policy";
+  }
+
+  if (normalizedText.includes("strict transport security") || normalizedText.includes("hsts")) {
+    return "root:strict-transport-security";
+  }
+
+  if (normalizedText.includes("x frame options") || normalizedText.includes("clickjacking")) {
+    return "root:x-frame-options";
+  }
+
+  if (
+    normalizedText.includes("x content type options") ||
+    normalizedText.includes("mime sniffing")
+  ) {
+    return "root:x-content-type-options";
+  }
+
+  if (normalizedText.includes("referrer policy")) {
+    return "root:referrer-policy";
+  }
+
+  if (normalizedText.includes("permissions policy")) {
+    return "root:permissions-policy";
+  }
+
+  if (normalizedText.includes("tls") || normalizedText.includes("ssl")) {
+    if (normalizedText.includes("self signed")) {
+      return "root:self-signed-tls";
     }
 
-    if (stage.status === "partial") {
-      return total + 6;
+    if (normalizedText.includes("expired") || normalizedText.includes("expires")) {
+      return "root:tls-expiration";
     }
 
-    return total;
-  }, 0);
-  const visibilityPenalty =
-    (isScannerVisibilityLimited(result) ? 10 : 0) +
-    (result.meta.statusCode === 403 ? 10 : 0) +
-    (result.meta.stages.headers.reason?.includes("unable_to_verify") ? 8 : 0) +
-    (result.meta.stages.tls.status === "partial" || result.meta.stages.tls.status === "timeout"
-      ? 8
-      : 0);
+    if (normalizedText.includes("weak") || normalizedText.includes("deprecated")) {
+      return "root:weak-tls";
+    }
 
-  return Math.min(100, Math.max(20, confidence - degradedStages - visibilityPenalty));
+    return "root:tls";
+  }
+
+  if (
+    normalizedText.includes("infrastructure") ||
+    normalizedText.includes("server metadata")
+  ) {
+    return "root:infrastructure-exposure";
+  }
+
+  return `root:${normalizedText}`;
+}
+
+function getSeverityRank(severity: Severity) {
+  const ranks: Record<Severity, number> = {
+    critical: 5,
+    high: 4,
+    medium: 3,
+    low: 2,
+    informational: 1,
+  };
+
+  return ranks[severity];
+}
+
+function getFindingDetailScore(finding: Finding) {
+  return (
+    (finding.id ? 100 : 0) +
+    (finding.impact ? 80 : 0) +
+    (finding.remediation ? 80 : 0) +
+    finding.message.en.length +
+    finding.message.ar.length +
+    (finding.impact?.en.length ?? 0) +
+    (finding.impact?.ar.length ?? 0) +
+    (finding.remediation?.en.length ?? 0) +
+    (finding.remediation?.ar.length ?? 0)
+  );
+}
+
+function isActionableFinding(finding: Finding) {
+  const actionablePrefix = /^(enable|add|enforce|configure|review|restrict|remove|harden|investigate|verify|reduce)\b/i;
+
+  return (
+    actionablePrefix.test(finding.message.en.trim()) ||
+    actionablePrefix.test(finding.remediation?.en.trim() ?? "")
+  );
+}
+
+function dedupeFindings(findings: Finding[]) {
+  const uniqueFindings = new Map<string, Finding>();
+
+  findings.forEach((finding) => {
+    const key = getFindingDedupeKey(finding);
+    const existing = uniqueFindings.get(key);
+
+    if (!existing) {
+      uniqueFindings.set(key, finding);
+      return;
+    }
+
+    const findingDetail = getFindingDetailScore(finding);
+    const existingDetail = getFindingDetailScore(existing);
+    const findingSeverity = getSeverityRank(finding.severity);
+    const existingSeverity = getSeverityRank(existing.severity);
+    const findingActionable = isActionableFinding(finding);
+    const existingActionable = isActionableFinding(existing);
+
+    if (
+      findingSeverity > existingSeverity ||
+      (findingSeverity === existingSeverity &&
+        findingActionable &&
+        !existingActionable) ||
+      (findingSeverity === existingSeverity &&
+        findingActionable === existingActionable &&
+        findingDetail > existingDetail)
+    ) {
+      uniqueFindings.set(key, finding);
+    }
+  });
+
+  return Array.from(uniqueFindings.values());
+}
+
+function getRecommendationRootKeys(result: ScanResult) {
+  const recommendationRoots = new Set<string>();
+
+  if (result.redirects.suspicious) {
+    recommendationRoots.add("root:redirect");
+  }
+
+  if (result.technologies.length > 0 || result.meta.server) {
+    recommendationRoots.add("root:infrastructure-exposure");
+  }
+
+  return recommendationRoots;
+}
+
+function removeFindingRecommendationOverlaps(result: ScanResult) {
+  const recommendationRoots = getRecommendationRootKeys(result);
+
+  if (recommendationRoots.size === 0) {
+    return result.findings;
+  }
+
+  return result.findings.filter((finding) => {
+    const key = getFindingDedupeKey(finding);
+
+    if (!recommendationRoots.has(key)) {
+      return true;
+    }
+
+    return isActionableFinding(finding);
+  });
+}
+
+function getSeverityScoreCeiling(findings: Finding[]) {
+  if (findings.some((finding) => finding.severity === "critical")) {
+    return 65;
+  }
+
+  if (findings.some((finding) => finding.severity === "high")) {
+    return 79;
+  }
+
+  if (findings.some((finding) => finding.severity === "medium")) {
+    return 89;
+  }
+
+  if (findings.some((finding) => finding.severity === "low")) {
+    return 95;
+  }
+
+  return 100;
+}
+
+function getPresentHeaderCount(headers: ScanResult["headers"]) {
+  return SECURITY_HEADERS.reduce(
+    (total, header) => total + (headers[header] ? 1 : 0),
+    0,
+  );
+}
+
+function getHeaderCoverageScoreCeiling(result: ScanResult) {
+  const presentHeaderCount = getPresentHeaderCount(result.headers);
+
+  if (canReachPerfectScore(result)) {
+    return 100;
+  }
+
+  if (headerObservationTelemetryIncomplete(result)) {
+    const trustedSurface =
+      result.intelligence.reputation === "trusted" || result.reputation?.verdict === "clean";
+
+    return trustedSurface ? 92 : 88;
+  }
+
+  if (presentHeaderCount === 0) {
+    return 45;
+  }
+
+  if (presentHeaderCount <= 2) {
+    return 65;
+  }
+
+  if (presentHeaderCount <= 4) {
+    return 80;
+  }
+
+  return 95;
+}
+
+function hasWafDetected(result: ScanResult) {
+  return Boolean(
+    result.infrastructure.waf ||
+      result.infrastructure.detections.some((detection) => detection.category === "waf"),
+  );
+}
+
+function isHttpsEnabled(result: ScanResult) {
+  return result.meta.finalUrl.toLowerCase().startsWith("https://");
+}
+
+function hasIncompleteScanState(result: ScanResult) {
+  return Object.entries(result.meta.stages).some(([stageName, stage]) => {
+    if (stageName === "aiSummary") {
+      return false;
+    }
+
+    return stage.status === "timeout" || stage.status === "partial" || stage.status === "failed";
+  });
+}
+
+function hasAntiBotBlocking(result: ScanResult): boolean {
+  const reason = String(result.meta.stages.headers.reason ?? "");
+
+  return (
+    result.meta.statusCode === 403 ||
+    reason.includes("unable_to_verify") ||
+    reason.includes("anti_bot") ||
+    reason.includes("challenge")
+  );
+}
+
+function hasInfrastructureExposureFinding(result: ScanResult) {
+  return result.findings.some(
+    (finding) =>
+      finding.id === "infrastructure-exposed" ||
+      normalizeFindingTitle(finding.message.en).includes("infrastructure and server metadata"),
+  );
+}
+
+function areAllSecurityHeadersPresent(result: ScanResult) {
+  return getPresentHeaderCount(result.headers) === SECURITY_HEADERS.length;
+}
+
+function canReachPerfectScore(result: ScanResult) {
+  return (
+    isHttpsEnabled(result) &&
+    result.ssl.valid &&
+    isTls12OrNewer(result.ssl.protocol) &&
+    areAllSecurityHeadersPresent(result) &&
+    result.findings.length === 0 &&
+    !hasIncompleteScanState(result) &&
+    !hasAntiBotBlocking(result)
+  );
+}
+
+function getSecurityPostureScoreCeiling(result: ScanResult) {
+  const ceilings = [
+    getHeaderCoverageScoreCeiling(result),
+    isHttpsEnabled(result) ? 100 : 55,
+    getSeverityScoreCeiling(result.findings),
+  ];
+
+  if (canReachPerfectScore(result)) {
+    ceilings.push(100);
+  }
+
+  return Math.min(...ceilings);
+}
+
+function clampFinalScore(score: number) {
+  return Math.max(10, Math.min(100, Math.round(score)));
 }
 
 function calculateDeterministicScore(result: ScanResult) {
-  const headersCompleted =
-    result.meta.stages.headers.status === "completed" ||
-    result.meta.stages.headers.reason?.includes("unable_to_verify");
   const tlsCompleted = result.meta.stages.tls.status === "completed";
   const infrastructureCompleted =
     result.meta.stages.infrastructure.status === "completed";
-  const scannerVisibilityLimited = isScannerVisibilityLimited(result);
+  const headerTelemetryIncomplete = headerObservationTelemetryIncomplete(result);
   const missingHeaders = Object.entries(result.headers)
     .filter(([, present]) => !present)
     .map(([header]) => header);
-  const rawMissingHeaderPenalty =
-    missingHeaders.length * SCORE_WEIGHTS.missingHeader +
-    (missingHeaders.includes("content-security-policy") &&
-    missingHeaders.includes("x-frame-options")
-      ? SCORE_WEIGHTS.browserHardeningCluster
-      : 0);
-  const missingHeaderPenalty = headersCompleted
-    ? scannerVisibilityLimited
-      ? rawMissingHeaderPenalty * 0.5
-      : rawMissingHeaderPenalty
+  const missingHeaderPenalty = shouldPenalizeObservableMissingHeaders(result)
+    ? missingHeaders.reduce((total, header) => {
+        if (header === "content-security-policy" || header === "strict-transport-security") {
+          return total + 12;
+        }
+
+        return total + 8;
+      }, 0)
     : 0;
+  const httpsPenalty = isHttpsEnabled(result) ? 0 : 25;
+  const wafPenalty =
+    hasWafDetected(result) || headerTelemetryIncomplete ? 0 : 5;
+  const tlsVersionPenalty =
+    isHttpsEnabled(result) && result.ssl.protocol && !isTls12OrNewer(result.ssl.protocol)
+      ? 15
+      : 0;
+  const visibilityPenalty =
+    isScannerVisibilityLimited(result) ||
+    hasIncompleteScanState(result) ||
+    hasAntiBotBlocking(result)
+      ? 5
+      : 0;
+  const infrastructureExposurePenalty = hasInfrastructureExposureFinding(result) ? 3 : 0;
   const findingPenalty = result.findings.reduce(
     (total, finding) => total + FINDING_SCORE_DEDUCTION[finding.severity],
     0,
@@ -849,7 +1203,12 @@ function calculateDeterministicScore(result: ScanResult) {
       ? SCORE_WEIGHTS.serverExposure
       : 0;
   const totalPenalty =
+    httpsPenalty +
     missingHeaderPenalty +
+    wafPenalty +
+    tlsVersionPenalty +
+    visibilityPenalty +
+    infrastructureExposurePenalty +
     findingPenalty +
     intelligencePenalty +
     tlsPenalty +
@@ -859,14 +1218,19 @@ function calculateDeterministicScore(result: ScanResult) {
   const positiveTrustBonus = calculatePositiveTrustBonus(result);
   const rawScore = 100 - totalPenalty + positiveTrustBonus;
 
-  return applyScoreSanityProtection(rawScore, result);
+  const calibratedScore = applyScoreSanityProtection(rawScore, result);
+  const scoreCeiling = getSecurityPostureScoreCeiling(result);
+
+  return clampFinalScore(Math.min(calibratedScore, scoreCeiling));
 }
 
 function finalizeScore(result: ScanResult) {
+  result.findings = dedupeFindings(result.findings);
   result.score = calculateDeterministicScore(result);
   result.grade = calculateGrade(result.score);
   result.threatLevel = calculateThreatLevel(result.score);
   result.confidence = calculateConfidence(result);
+  result.findings = removeFindingRecommendationOverlaps(result);
   result.deterministicHash = generateDeterministicHash(result);
 
   return Object.freeze(result);
@@ -1153,6 +1517,60 @@ function isAntiBotOrChallengeResponse(response: Response) {
     headers.includes("perimeterx") ||
     server.includes("cloudflare")
   );
+}
+
+/**
+ * Many providers strip or reshape headers for automated clients. A small response with none of the
+ * tracked security headers is not proof those controls are absent site-wide — only that we could
+ * not observe them on this surface.
+ */
+function shouldTreatFinalResponseAsLimitedObservableSurface(
+  response: Response,
+  headersUnableToVerify: boolean,
+): boolean {
+  if (headersUnableToVerify) {
+    return true;
+  }
+
+  if (response.status === 403 || response.status === 503) {
+    return true;
+  }
+
+  const distinctKeys = Array.from(response.headers.keys()).length;
+  const anyTrackedSecurityHeaderPresent = SECURITY_HEADERS.some((header) =>
+    response.headers.has(header),
+  );
+
+  return distinctKeys <= 14 && !anyTrackedSecurityHeaderPresent;
+}
+
+/**
+ * Header-specific observability only (TLS/redirect partial stages alone must not waive posture caps).
+ */
+function headerObservationTelemetryIncomplete(result: ScanResult): boolean {
+  const reason = String(result.meta.stages.headers.reason ?? "").toLowerCase();
+
+  return (
+    result.meta.stages.headers.status !== "completed" ||
+    reason.includes("unable_to_verify") ||
+    reason.includes("limited_observable_surface") ||
+    hasAntiBotBlocking(result)
+  );
+}
+
+/** Missing-header penalties apply only when we actually observed a normal HTML surface end-to-end. */
+function shouldPenalizeObservableMissingHeaders(result: ScanResult): boolean {
+  if (result.meta.stages.headers.status !== "completed") {
+    return false;
+  }
+
+  const reason = String(result.meta.stages.headers.reason ?? "").toLowerCase();
+
+  if (reason.includes("unable_to_verify") || reason.includes("limited_observable_surface")) {
+    return false;
+  }
+
+  return !hasAntiBotBlocking(result);
 }
 
 async function inspectTlsCertificate(
@@ -2066,20 +2484,28 @@ export async function scanUrl(input: string): Promise<ScanResult> {
     const finalResponse = redirectResult.finalStep.response;
     const headersStartedAt = Date.now();
     const headersUnableToVerify = isAntiBotOrChallengeResponse(finalResponse);
+    const limitedObservableSurface = shouldTreatFinalResponseAsLimitedObservableSurface(
+      finalResponse,
+      headersUnableToVerify,
+    );
 
     result.headers = analyzeSecurityHeaders(
       finalResponse,
       result.findings,
-      headersUnableToVerify,
+      limitedObservableSurface,
     );
     analyzeResponseSafety(finalResponse, result.findings);
-    updateStage(
-      result,
-      "headers",
-      headersUnableToVerify ? "partial" : "completed",
-      headersStartedAt,
-      headersUnableToVerify ? "unable_to_verify_antibot" : undefined,
-    );
+
+    const headersStageStatus: ScanStageState["status"] = limitedObservableSurface
+      ? "partial"
+      : "completed";
+    const headersStageReason = headersUnableToVerify
+      ? "unable_to_verify_antibot"
+      : limitedObservableSurface
+        ? "limited_observable_surface"
+        : undefined;
+
+    updateStage(result, "headers", headersStageStatus, headersStartedAt, headersStageReason);
 
     const infrastructureStartedAt = Date.now();
 

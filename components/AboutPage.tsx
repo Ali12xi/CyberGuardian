@@ -5,17 +5,17 @@ import { useLanguage } from "@/components/LanguageProvider";
 
 const CONTENT = {
   en: {
-    eyebrow: "About CyberGuardian AI",
+    eyebrow: "About CyberGurdian AI",
     title: "Cybersecurity intelligence that people can actually understand.",
     subtitle:
-      "CyberGuardian AI V1 turns externally observable website security signals into deterministic, explainable, and human-readable intelligence for developers, researchers, founders, and decision makers.",
+      "CyberGurdian AI V1 turns externally observable website security signals into deterministic, explainable, and human-readable intelligence for developers, researchers, founders, and decision makers.",
     missionTitle: "Mission",
     mission:
-      "The mission is simple: make web security analysis clearer, calmer, and more useful. CyberGuardian AI exists to help people understand risk without drowning them in raw scanner output or unverifiable claims.",
+      "The mission is simple: make web security analysis clearer, calmer, and more useful. CyberGurdian AI exists to help people understand risk without drowning them in raw scanner output or unverifiable claims.",
     philosophyTitle: "Security Philosophy",
     philosophy:
-      "Security intelligence should be evidence-based, contextual, and readable. A missing header is not automatically a breach, and a strong brand is not automatically safe. CyberGuardian AI balances technical signals with trust, confidence, and observable attack impact.",
-    doesTitle: "What CyberGuardian AI Does",
+      "Security intelligence should be evidence-based, contextual, and readable. A missing header is not automatically a breach, and a strong brand is not automatically safe. CyberGurdian AI balances technical signals with trust, confidence, and observable attack impact.",
+    doesTitle: "What CyberGurdian AI Does",
     does: [
       "Validates URLs safely before scanning to reduce SSRF and private-network risk.",
       "Analyzes TLS, Security Headers, Redirects, Domain signals, reputation, and passive Infrastructure fingerprints.",
@@ -33,26 +33,26 @@ const CONTENT = {
     ],
     differentTitle: "What Makes It Different",
     different:
-      "CyberGuardian AI is built around explainability. It does not fabricate CVEs, exaggerate weak evidence, or present reputation feeds as absolute truth. The platform correlates signals and explains what they may mean from a practical security perspective.",
+      "CyberGurdian AI is built around explainability. It does not fabricate CVEs, exaggerate weak evidence, or present reputation feeds as absolute truth. The platform correlates signals and explains what they may mean from a practical security perspective.",
     trustTitle: "Trust And Intelligence Approach",
     trust:
       "The platform treats every external signal as supporting evidence. TLS posture, browser hardening, redirects, reputation, CDN/WAF presence, and scan confidence are weighed together so the final posture feels realistic and repeatable.",
     futureTitle: "Future Vision",
     future:
-      "CyberGuardian AI will continue growing toward a broader cybersecurity intelligence workspace with historical comparisons, organization profiles, compliance mapping, and richer collaboration workflows while keeping the analysis understandable.",
+      "CyberGurdian AI will continue growing toward a broader cybersecurity intelligence workspace with historical comparisons, organization profiles, compliance mapping, and richer collaboration workflows while keeping the analysis understandable.",
   },
   ar: {
-    eyebrow: "عن CyberGuardian AI",
+    eyebrow: "عن CyberGurdian AI",
     title: "استخبارات أمنية يمكن فهمها فعليًا.",
     subtitle:
-      "يحوّل CyberGuardian AI V1 الإشارات الأمنية المرئية خارجيًا للمواقع إلى استخبارات حتمية وقابلة للتفسير ومفهومة للمطورين والباحثين والمؤسسين وصنّاع القرار.",
+      "يحوّل CyberGurdian AI V1 الإشارات الأمنية المرئية خارجيًا للمواقع إلى استخبارات حتمية وقابلة للتفسير ومفهومة للمطورين والباحثين والمؤسسين وصنّاع القرار.",
     missionTitle: "المهمة",
     mission:
-      "المهمة بسيطة: جعل تحليل أمن الويب أوضح وأكثر هدوءًا وفائدة. صُمم CyberGuardian AI لمساعدة الناس على فهم المخاطر دون إغراقهم بمخرجات فنية خام أو ادعاءات غير قابلة للتحقق.",
+      "المهمة بسيطة: جعل تحليل أمن الويب أوضح وأكثر هدوءًا وفائدة. صُمم CyberGurdian AI لمساعدة الناس على فهم المخاطر دون إغراقهم بمخرجات فنية خام أو ادعاءات غير قابلة للتحقق.",
     philosophyTitle: "فلسفة الأمن",
     philosophy:
-      "يجب أن تكون الاستخبارات الأمنية مبنية على الدليل والسياق وقابلة للقراءة. غياب Header لا يعني اختراقًا تلقائيًا، واسم المؤسسة القوي لا يعني الأمان المطلق. يوازن CyberGuardian AI بين الإشارات التقنية والثقة ومستوى اليقين والأثر العملي للهجوم.",
-    doesTitle: "ماذا يفعل CyberGuardian AI",
+      "يجب أن تكون الاستخبارات الأمنية مبنية على الدليل والسياق وقابلة للقراءة. غياب Header لا يعني اختراقًا تلقائيًا، واسم المؤسسة القوي لا يعني الأمان المطلق. يوازن CyberGurdian AI بين الإشارات التقنية والثقة ومستوى اليقين والأثر العملي للهجوم.",
+    doesTitle: "ماذا يفعل CyberGurdian AI",
     does: [
       "يتحقق من URL بأمان قبل الفحص لتقليل مخاطر SSRF والشبكات الخاصة.",
       "يحلل TLS وSecurity Headers وRedirects وإشارات Domain والسمعة وبصمات Infrastructure السلبية.",
@@ -70,13 +70,13 @@ const CONTENT = {
     ],
     differentTitle: "ما الذي يميزه",
     different:
-      "يرتكز CyberGuardian AI على قابلية التفسير. لا يختلق CVEs، ولا يضخم الأدلة الضعيفة، ولا يعرض مصادر السمعة كحقيقة مطلقة. تربط المنصة الإشارات وتشرح معناها من منظور أمني عملي.",
+      "يرتكز CyberGurdian AI على قابلية التفسير. لا يختلق CVEs، ولا يضخم الأدلة الضعيفة، ولا يعرض مصادر السمعة كحقيقة مطلقة. تربط المنصة الإشارات وتشرح معناها من منظور أمني عملي.",
     trustTitle: "نهج الثقة والاستخبارات",
     trust:
       "تتعامل المنصة مع كل إشارة خارجية كدليل مساعد. يتم وزن حالة TLS وتقوية المتصفح وRedirects والسمعة ووجود CDN/WAF وثقة الفحص معًا لتقديم تقييم واقعي وقابل للتكرار.",
     futureTitle: "الرؤية المستقبلية",
     future:
-      "سيتطور CyberGuardian AI نحو مساحة أوسع لاستخبارات الأمن السيبراني تشمل المقارنات التاريخية وملفات المؤسسات وخرائط الامتثال وسير عمل تعاونية أغنى، مع الحفاظ على وضوح التحليل.",
+      "سيتطور CyberGurdian AI نحو مساحة أوسع لاستخبارات الأمن السيبراني تشمل المقارنات التاريخية وملفات المؤسسات وخرائط الامتثال وسير عمل تعاونية أغنى، مع الحفاظ على وضوح التحليل.",
   },
 } as const;
 

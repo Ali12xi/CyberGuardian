@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import ReportCard from "@/components/ReportCard";
 import UrlInput from "@/components/UrlInput";
@@ -81,7 +81,38 @@ function ScanProgress({
   );
 }
 
+function HowItWorksSection() {
+  const { t } = useLanguage();
+
+  return (
+    <section className="mx-auto mt-9 w-full max-w-5xl space-y-4 px-1 text-center sm:mt-11 sm:space-y-5 sm:px-0 lg:mt-12">
+      <h2 className="bidi-safe text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">
+        {t.howItWorksTitle}
+      </h2>
+      <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+        {t.howItWorksCards.map((card, index) => (
+          <article
+            className="group rounded-3xl border border-cyan-300/[0.11] bg-white/80 p-4 text-start shadow-lg shadow-cyan-950/[0.025] backdrop-blur-sm transition dark:bg-slate-950/65 dark:shadow-cyan-500/[0.018] sm:p-5"
+            key={card.title}
+          >
+            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-2xl border border-cyan-300/[0.14] bg-cyan-300/[0.05] text-xs font-black text-cyan-700 dark:text-cyan-100">
+              {index + 1}
+            </div>
+            <h3 className="bidi-safe text-base font-bold text-slate-950 dark:text-white">
+              {card.title}
+            </h3>
+            <p className="bidi-safe mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300/90">
+              {card.description}
+            </p>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function AnalyzePanel() {
+  const { t } = useLanguage();
   const [result, setResult] = useState<ScanResult | null>(null);
   const [pendingResult, setPendingResult] = useState<ScanResult | null>(null);
   const [explanation, setExplanation] = useState<AIExplanation | null>(null);
@@ -90,8 +121,13 @@ export default function AnalyzePanel() {
   const [progressVisible, setProgressVisible] = useState(false);
   const [progressLeaving, setProgressLeaving] = useState(false);
   const [progressStep, setProgressStep] = useState(0);
+  const [formResetKey, setFormResetKey] = useState(0);
+  const explanationRequestVersion = useRef(0);
 
-  const generateExplanation = useCallback(async (scanResult: ScanResult) => {
+  const generateExplanation = useCallback(async (
+    scanResult: ScanResult,
+    requestVersion: number,
+  ) => {
     setAiLoading(true);
 
     try {
@@ -108,12 +144,16 @@ export default function AnalyzePanel() {
         return;
       }
 
-      setExplanation(data.explanation);
+      if (explanationRequestVersion.current === requestVersion) {
+        setExplanation(data.explanation);
+      }
     } catch {
       // The API generates a local summary when Claude cannot respond. Network
       // interruption simply leaves the staged intelligence panel in place.
     } finally {
-      setAiLoading(false);
+      if (explanationRequestVersion.current === requestVersion) {
+        setAiLoading(false);
+      }
     }
   }, []);
 
@@ -149,7 +189,10 @@ export default function AnalyzePanel() {
         if (pendingResult) {
           setResult(pendingResult);
           setPendingResult(null);
-          void generateExplanation(pendingResult);
+          void generateExplanation(
+            pendingResult,
+            explanationRequestVersion.current,
+          );
         }
       }, FADE_DURATION_MS);
     }, STEP_DURATION_MS);
@@ -158,6 +201,7 @@ export default function AnalyzePanel() {
   }, [generateExplanation, loading, pendingResult, progressStep, progressVisible]);
 
   function handleScanStart() {
+    explanationRequestVersion.current += 1;
     setResult(null);
     setPendingResult(null);
     setExplanation(null);
@@ -175,13 +219,40 @@ export default function AnalyzePanel() {
     setLoading(nextLoading);
   }
 
+  function handleNewScan() {
+    explanationRequestVersion.current += 1;
+    setResult(null);
+    setPendingResult(null);
+    setExplanation(null);
+    setAiLoading(false);
+    setLoading(false);
+    setProgressVisible(false);
+    setProgressLeaving(false);
+    setProgressStep(0);
+    setFormResetKey((current) => current + 1);
+  }
+
+  const showHowItWorks = !result && !pendingResult && !progressVisible;
+  const showPostScanAction = Boolean(result) && !progressVisible;
+
   return (
-    <div className="w-full min-w-0 space-y-5 sm:space-y-6">
+    <div className="w-full min-w-0 space-y-5 sm:space-y-7">
       <UrlInput
+        key={formResetKey}
         onLoadingChange={handleLoadingChange}
         onScanComplete={handleScanComplete}
         onScanStart={handleScanStart}
       />
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+        {t.heroBadges.map((badge) => (
+          <span
+            className="bidi-safe rounded-full border border-cyan-300/[0.12] bg-cyan-300/[0.035] px-3 py-1.5 text-xs font-semibold leading-5 text-cyan-700 shadow-sm shadow-cyan-500/[0.018] dark:text-cyan-100/85 sm:px-4"
+            key={badge}
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
       {progressVisible ? (
         <ScanProgress currentStep={progressStep} leaving={progressLeaving} />
       ) : (
@@ -192,6 +263,21 @@ export default function AnalyzePanel() {
           result={result}
         />
       )}
+      {showPostScanAction ? (
+        <section className="mx-auto w-full max-w-xl rounded-3xl border border-cyan-300/[0.12] bg-white/80 p-4 text-center shadow-lg shadow-cyan-950/[0.03] backdrop-blur-sm dark:bg-slate-950/65 dark:shadow-cyan-500/[0.02] sm:p-5">
+          <h2 className="bidi-safe text-base font-bold text-slate-950 dark:text-white sm:text-lg">
+            {t.postScanTitle}
+          </h2>
+          <button
+            className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.08] px-5 text-sm font-bold text-cyan-700 transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.12] focus:outline-none focus:ring-2 focus:ring-cyan-300/40 dark:text-cyan-100"
+            type="button"
+            onClick={handleNewScan}
+          >
+            {t.postScanButton}
+          </button>
+        </section>
+      ) : null}
+      {showHowItWorks ? <HowItWorksSection /> : null}
     </div>
   );
 }

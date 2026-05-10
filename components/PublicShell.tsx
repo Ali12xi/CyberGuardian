@@ -33,7 +33,7 @@ export default function PublicShell({ children }: { children: React.ReactNode })
     <main className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 overflow-x-hidden px-4 py-5 transition-all duration-300 min-[390px]:px-5 sm:gap-8 sm:px-6 sm:py-8 lg:px-8 lg:py-12 2xl:max-w-6xl">
       <nav className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <Link
-          className="w-fit text-sm font-semibold uppercase tracking-[0.24em] text-cyan-600 transition hover:text-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-300/50 dark:text-cyan-300 sm:tracking-[0.3em]"
+          className="w-fit text-sm font-semibold tracking-[0.08em] text-cyan-600 transition hover:text-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-300/50 dark:text-cyan-300 sm:tracking-[0.12em]"
           href="/"
         >
           {t.brand}
