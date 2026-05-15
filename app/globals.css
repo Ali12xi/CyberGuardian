@@ -5,17 +5,9 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light;
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --background: #020617;
-    --foreground: #e2e8f0;
-  }
+  color-scheme: dark;
+  --background: #020617;
+  --foreground: #e2e8f0;
 }
 
 body {

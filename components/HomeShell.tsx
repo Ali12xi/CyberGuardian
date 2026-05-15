@@ -23,10 +23,10 @@ export default function HomeShell() {
             {t.heroVersionLabel}
           </span>
         </p>
-        <h1 className="relative z-10 text-[1.7rem] font-black leading-tight tracking-[-0.035em] text-slate-950 transition dark:text-white min-[390px]:text-3xl sm:text-4xl lg:text-5xl">
+        <h1 className="relative z-10 text-[1.7rem] font-black leading-tight tracking-[-0.035em] text-white transition min-[390px]:text-3xl sm:text-4xl lg:text-5xl">
           {t.heroTitle}
         </h1>
-        <p className="bidi-safe relative z-10 mx-auto mt-4 max-w-2xl whitespace-pre-line text-sm leading-7 text-slate-600 dark:text-slate-300/90 min-[390px]:text-base sm:mt-5 sm:text-lg sm:leading-8">
+        <p className="bidi-safe relative z-10 mx-auto mt-4 max-w-2xl whitespace-pre-line text-sm leading-7 text-slate-300/90 min-[390px]:text-base sm:mt-5 sm:text-lg sm:leading-8">
           {t.heroSubtitle}
         </p>
       </section>

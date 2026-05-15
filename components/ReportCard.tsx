@@ -1443,11 +1443,11 @@ export default function ReportCard({
 
   if (!result) {
     return (
-      <section className="rounded-[2rem] border border-dashed border-cyan-400/20 bg-white/75 p-5 text-center shadow-sm shadow-cyan-950/[0.02] transition dark:bg-slate-950/65 min-[390px]:p-6 sm:bg-white/55 sm:p-8 sm:dark:bg-slate-950/50">
-        <h2 className="bidi-safe text-lg font-semibold text-slate-950 dark:text-white min-[390px]:text-xl">
+      <section className="rounded-[2rem] border border-dashed border-cyan-400/20 bg-slate-950/65 p-5 text-center shadow-sm shadow-cyan-500/[0.018] transition min-[390px]:p-6 sm:bg-slate-950/50 sm:p-8">
+        <h2 className="bidi-safe text-lg font-semibold text-white min-[390px]:text-xl">
           {t.reportEmptyTitle}
         </h2>
-        <p className="bidi-safe mt-3 text-sm leading-7 text-slate-600 dark:text-slate-300/85 sm:text-base">
+        <p className="bidi-safe mt-3 text-sm leading-7 text-slate-300/85 sm:text-base">
           {t.reportEmptySubtitle}
         </p>
       </section>
@@ -1456,7 +1456,7 @@ export default function ReportCard({
 
   return (
     <section className="w-full min-w-0 space-y-6 sm:space-y-8">
-      <h2 className="bidi-safe text-center text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
+      <h2 className="bidi-safe text-center text-xl font-semibold text-white min-[390px]:text-2xl">
         {t.reportEmptyTitle}
       </h2>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end rtl:sm:justify-start">

@@ -44,7 +44,7 @@ export default function PublicShell({ children }: { children: React.ReactNode })
         </Link>
 
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
-          <div className="flex min-w-0 max-w-full rounded-2xl border border-slate-200 bg-white/80 p-1 text-xs font-semibold shadow-sm dark:border-white/10 dark:bg-slate-950/85 sm:bg-white/60 sm:dark:bg-slate-950/60">
+          <div className="flex min-w-0 max-w-full rounded-2xl border border-white/10 bg-slate-950/85 p-1 text-xs font-semibold shadow-sm sm:bg-slate-950/60">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href;
 

@@ -86,7 +86,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr">
+    <html lang="en" dir="ltr" className="dark" style={{ colorScheme: "dark" }}>
       <body className={`${inter.variable} ${cairo.variable}`}>
         <script
           type="application/ld+json"

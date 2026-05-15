@@ -63,7 +63,7 @@ export default function UrlInput({
 
   return (
     <form
-      className="w-full rounded-3xl border border-cyan-400/[0.16] bg-white/90 p-4 shadow-xl shadow-cyan-950/[0.06] backdrop-blur-sm transition dark:bg-slate-950/85 dark:shadow-cyan-500/[0.035] min-[390px]:p-5 sm:bg-white/80 sm:backdrop-blur sm:dark:bg-slate-950/75"
+      className="w-full rounded-3xl border border-cyan-400/[0.16] bg-slate-950/85 p-4 shadow-xl shadow-cyan-950/[0.06] backdrop-blur-sm transition dark:shadow-cyan-500/[0.035] min-[390px]:p-5 sm:bg-slate-950/75 sm:backdrop-blur"
       dir={language === "ar" ? "rtl" : "ltr"}
       onSubmit={handleSubmit}
     >
@@ -76,7 +76,7 @@ export default function UrlInput({
       {/* LTR row: keeps URL field + primary button in stable physical positions for all locales */}
       <div className="flex min-w-0 flex-col gap-3 md:flex-row" dir="ltr">
         <input
-          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-300 bg-white/30 px-4 text-start text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:bg-white/50 focus:ring-2 focus:ring-cyan-400/[0.16] disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-950/60 min-[390px]:text-base"
+          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-700/80 bg-slate-950/40 px-4 text-start text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:bg-slate-950/60 focus:ring-2 focus:ring-cyan-400/[0.16] disabled:cursor-not-allowed disabled:opacity-70 min-[390px]:text-base"
           id="url"
           name="url"
           onChange={(event) => setUrl(event.target.value)}

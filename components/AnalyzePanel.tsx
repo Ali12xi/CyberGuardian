@@ -92,16 +92,16 @@ function HowItWorksSection() {
       <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:flex-nowrap">
         {t.howItWorksCards.map((card, index) => (
           <article
-            className="group min-w-0 w-full flex-1 rounded-3xl border border-cyan-300/[0.11] bg-white/80 p-4 text-start shadow-lg shadow-cyan-950/[0.025] backdrop-blur-sm transition dark:bg-slate-950/65 dark:shadow-cyan-500/[0.018] sm:p-5 md:min-w-0 md:basis-0"
+            className="group min-w-0 w-full flex-1 rounded-3xl border border-cyan-300/[0.11] bg-slate-950/65 p-4 text-start shadow-lg shadow-cyan-500/[0.018] backdrop-blur-sm transition sm:p-5 md:min-w-0 md:basis-0"
             key={card.title}
           >
-            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-2xl border border-cyan-300/[0.14] bg-cyan-300/[0.05] text-xs font-black text-cyan-700 dark:text-cyan-100">
+            <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-2xl border border-cyan-300/[0.14] bg-cyan-300/[0.05] text-xs font-black text-cyan-100">
               {index + 1}
             </div>
-            <h3 className="bidi-safe text-base font-bold text-slate-950 dark:text-white">
+            <h3 className="bidi-safe text-base font-bold text-white">
               {card.title}
             </h3>
-            <p className="bidi-safe mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300/90">
+            <p className="bidi-safe mt-2 text-sm leading-6 text-slate-300/90">
               {card.description}
             </p>
           </article>

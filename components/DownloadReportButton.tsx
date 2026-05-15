@@ -129,7 +129,7 @@ function ArabicPdfNoticeModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-3xl border border-cyan-300/20 bg-white/95 p-6 text-right shadow-xl shadow-cyan-950/10 backdrop-blur-sm dark:border-cyan-400/25 dark:bg-slate-950/95 dark:shadow-cyan-500/10"
+        className="w-full max-w-md rounded-3xl border border-cyan-400/25 bg-slate-950/95 p-6 text-right shadow-xl shadow-cyan-500/10 backdrop-blur-sm"
         dir="rtl"
         role="dialog"
         aria-labelledby="ar-pdf-notice-title"
