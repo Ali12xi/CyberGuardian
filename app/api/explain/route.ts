@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateSecurityExplanation } from "@/lib/claude";
 import { translations } from "@/lib/i18n";
+import { verifyScanToken } from "@/lib/scanToken";
 import type { ExplainApiResponse, ScanResult } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -47,10 +48,35 @@ function isScanResult(value: unknown): value is ScanResult {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = (await request.json()) as { result?: unknown };
+    const body = (await request.json()) as { result?: unknown; scanToken?: unknown };
 
     if (!isScanResult(body.result)) {
       return errorResponse(INVALID_REQUEST_ERROR, 400);
+    }
+
+    const scanToken = typeof body.scanToken === "string" ? body.scanToken.trim() : "";
+
+    if (!scanToken) {
+      console.warn("[explain] Missing scan token");
+      return errorResponse(
+        {
+          en: translations.en.scanTokenRequired,
+          ar: translations.ar.scanTokenRequired,
+        },
+        403,
+      );
+    }
+
+    const verification = verifyScanToken(scanToken, body.result);
+
+    if (!verification.ok) {
+      console.warn("[explain] Token verification failed", { reason: verification.reason });
+      const errorMessage =
+        verification.reason === "expired"
+          ? { en: translations.en.scanTokenExpired, ar: translations.ar.scanTokenExpired }
+          : { en: translations.en.scanTokenInvalid, ar: translations.ar.scanTokenInvalid };
+
+      return errorResponse(errorMessage, 403);
     }
 
     const explanation = await generateSecurityExplanation(body.result);

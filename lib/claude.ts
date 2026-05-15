@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getOptionalServerEnv } from "@/lib/env";
+import { formatSecurityVisibilityOverall, translations } from "@/lib/i18n";
 import type { AIExplanation, AIExplanationContent, ScanResult } from "@/lib/types";
 
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
@@ -114,7 +115,7 @@ function getInfrastructureTrust(scanResult: ScanResult) {
   if (
     scanResult.intelligence.reputation === "trusted" &&
     scanResult.ssl.valid &&
-    scanResult.confidence >= 80
+    scanResult.observableCoverage.overall === "full"
   ) {
     return {
       en: "high trust",
@@ -201,15 +202,17 @@ export function generateLocalSecurityExplanation(
   const technologyText =
     scanResult.technologies.length > 0
       ? scanResult.technologies.join(", ")
-      : "no high-confidence framework fingerprint";
+      : "no strong framework fingerprint";
   const technologyTextAr =
     scanResult.technologies.length > 0
       ? scanResult.technologies.join("، ")
-      : "عدم وجود بصمة تقنية عالية الثقة";
+      : "لم يتم رصد بصمة إطار عمل قوية";
+  const visibilityEn = formatSecurityVisibilityOverall(scanResult.observableCoverage.overall, translations.en);
+  const visibilityAr = formatSecurityVisibilityOverall(scanResult.observableCoverage.overall, translations.ar);
 
   return {
     en: {
-      executiveRiskOverview: `The target is assessed as ${scanResult.threatLevel} risk with a deterministic score of ${scanResult.score}/100 and ${scanResult.confidence}% scan confidence. This conclusion correlates TLS posture, browser hardening headers, domain intelligence, redirect behavior, and externally visible infrastructure metadata.`,
+      executiveRiskOverview: `The target is assessed as ${scanResult.threatLevel} risk with a deterministic score of ${scanResult.score}/95. External security visibility is ${visibilityEn} (how much security posture was observable from outside). This conclusion correlates TLS posture, browser hardening headers, domain intelligence, redirect behavior, and externally visible infrastructure metadata.`,
       attackSurfaceAnalysis: browserHardeningGap
         ? "Missing Content-Security-Policy combined with missing X-Frame-Options increases browser-side attack exposure. An attacker may leverage absent browser hardening policies to increase client-side exploitation opportunities, including clickjacking and higher impact from script injection if another weakness exists."
         : `The externally visible attack surface is shaped by ${missingHeaders.length > 0 ? `missing headers (${missingHeaders.join(", ")})` : "the observed HTTP security controls"}, TLS posture, and redirect behavior. The findings represent externally observable exposure rather than proof of compromise.`,
@@ -219,7 +222,7 @@ export function generateLocalSecurityExplanation(
       ),
     },
     ar: {
-      executiveRiskOverview: `تم تقييم الهدف بمستوى خطورة ${scanResult.threatLevel} وبدرجة حتمية ${scanResult.score}/100 وثقة فحص ${scanResult.confidence}%. يربط هذا الاستنتاج بين حالة TLS ورؤوس تقوية المتصفح واستخبارات النطاق وسلوك إعادة التوجيه وبيانات البنية التحتية المرئية خارجيًا.`,
+      executiveRiskOverview: `تم تقييم الهدف بمستوى خطورة ${scanResult.threatLevel} وبدرجة حتمية ${scanResult.score}/95. مستوى الرؤية الأمنية الخارجية هو ${visibilityAr} (مدى ما يمكن رصدُه من الوضع الأمني خارجيًا). يربط هذا الاستنتاج بين حالة TLS ورؤوس تقوية المتصفح واستخبارات النطاق وسلوك إعادة التوجيه وبيانات البنية التحتية المرئية خارجيًا.`,
       attackSurfaceAnalysis: browserHardeningGap
         ? "غياب Content-Security-Policy مع غياب X-Frame-Options يزيد التعرض لهجمات المتصفح. قد يستغل المهاجم غياب سياسات تقوية المتصفح لزيادة فرص الاستغلال من جهة العميل، بما في ذلك النقر الخادع وزيادة أثر حقن السكربت عند وجود ضعف آخر."
         : `يتشكل سطح الهجوم الخارجي من ${missingHeaders.length > 0 ? `الرؤوس المفقودة (${missingHeaders.join(", ")})` : "ضوابط HTTP الأمنية المرصودة"} وحالة TLS وسلوك إعادة التوجيه. تمثل النتائج تعرضًا مرئيًا خارجيًا وليس دليلًا على اختراق.`,
@@ -240,6 +243,8 @@ function buildPrompt(scanResult: ScanResult) {
 
   return `Produce an enterprise-grade cybersecurity intelligence summary for this deterministic website security scan.
 
+The JSON fields populate the in-app **Security Assessment** section: executive overview (\`executiveRiskOverview\`), attack-surface narrative (\`attackSurfaceAnalysis\`), infrastructure trust (\`infrastructureTrustAssessment\`), and prioritized recommendations (\`recommendedSecurityActions\`).
+
 Return ONLY valid JSON with this exact structure:
 {
   "en": {
@@ -257,6 +262,7 @@ Return ONLY valid JSON with this exact structure:
 }
 
 Tone requirements:
+- Use the term "security visibility" for how much of the target's security posture was observable externally; it is not a confidence score, scan accuracy percentage, or guarantee of safety.
 - Professional, analytical, realistic, executive-level, and cybersecurity-oriented.
 - Avoid generic motivational wording.
 - Correlate findings instead of listing them independently.
@@ -265,11 +271,13 @@ Tone requirements:
 - Keep recommendations practical and specific to the observed evidence.
 
 Scan data:
+The object \`securityVisibility\` records how much security posture was externally observable; \`overall\` uses internal codes full | partial | limited (in narrative, describe as high / partial / limited security visibility — not scan accuracy or guaranteed safety).
 ${JSON.stringify(
   {
     score: scanResult.score,
     grade: scanResult.grade,
-    confidence: scanResult.confidence,
+    securityVisibility: scanResult.observableCoverage,
+    scoreBreakdown: scanResult.scoreBreakdown,
     threatLevel: scanResult.threatLevel,
     scanTimestamp: scanResult.meta.scanTimestamp,
     ssl: scanResult.ssl,

@@ -4,7 +4,10 @@ import AboutPage from "@/components/AboutPage";
 export const metadata: Metadata = {
   title: "About CyberGurdian AI",
   description:
-    "Learn about CyberGurdian AI V1, an AI-powered cybersecurity intelligence platform for deterministic, explainable, human-readable website security analysis.",
+    "Learn about CyberGurdian AI — an AI-powered cybersecurity intelligence platform for deterministic, explainable, human-readable website security analysis.",
+  alternates: {
+    canonical: "/about",
+  },
   openGraph: {
     title: "About CyberGurdian AI",
     description:

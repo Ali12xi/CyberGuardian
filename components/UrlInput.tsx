@@ -2,11 +2,11 @@
 
 import { FormEvent, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import type { AnalyzeApiResponse, ScanResult } from "@/lib/types";
+import type { AnalyzeApiResponse, AnalyzeOkPayload } from "@/lib/types";
 
 type UrlInputProps = {
   onScanStart: () => void;
-  onScanComplete: (result: ScanResult) => void;
+  onScanComplete: (payload: AnalyzeOkPayload) => void;
   onLoadingChange: (loading: boolean) => void;
 };
 
@@ -48,7 +48,11 @@ export default function UrlInput({
         return;
       }
 
-      onScanComplete(data.result);
+      onScanComplete({
+        result: data.result,
+        scanId: data.scanId,
+        scanToken: data.scanToken,
+      });
     } catch {
       setError(t.networkError);
     } finally {
@@ -60,6 +64,7 @@ export default function UrlInput({
   return (
     <form
       className="w-full rounded-3xl border border-cyan-400/[0.16] bg-white/90 p-4 shadow-xl shadow-cyan-950/[0.06] backdrop-blur-sm transition dark:bg-slate-950/85 dark:shadow-cyan-500/[0.035] min-[390px]:p-5 sm:bg-white/80 sm:backdrop-blur sm:dark:bg-slate-950/75"
+      dir={language === "ar" ? "rtl" : "ltr"}
       onSubmit={handleSubmit}
     >
       <label
@@ -68,9 +73,10 @@ export default function UrlInput({
       >
         {t.urlLabel}
       </label>
-      <div className="flex min-w-0 flex-col gap-3 md:flex-row">
+      {/* LTR row: keeps URL field + primary button in stable physical positions for all locales */}
+      <div className="flex min-w-0 flex-col gap-3 md:flex-row" dir="ltr">
         <input
-          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-300 bg-white/30 px-4 text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:bg-white/50 focus:ring-2 focus:ring-cyan-400/[0.16] disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-950/60 min-[390px]:text-base"
+          className="min-h-12 min-w-0 flex-1 rounded-2xl border border-slate-300 bg-white/30 px-4 text-start text-sm text-slate-950 outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:bg-white/50 focus:ring-2 focus:ring-cyan-400/[0.16] disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700/80 dark:bg-slate-950/40 dark:text-white dark:placeholder:text-slate-500 dark:focus:bg-slate-950/60 min-[390px]:text-base"
           id="url"
           name="url"
           onChange={(event) => setUrl(event.target.value)}
@@ -81,7 +87,7 @@ export default function UrlInput({
           disabled={loading}
         />
         <button
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 font-semibold text-slate-950 shadow-lg shadow-cyan-500/[0.12] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
+          className="inline-flex min-h-12 w-full min-w-[44px] items-center justify-center gap-2 rounded-2xl bg-cyan-500 px-6 font-semibold text-slate-950 shadow-lg shadow-cyan-500/[0.12] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-70 md:w-auto"
           type="submit"
           disabled={loading}
         >

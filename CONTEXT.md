@@ -6,9 +6,9 @@ This document summarizes the **CyberGurdian** web application as implemented in 
 
 ## What the app does
 
-**CyberGurdian AI** is a **website security intelligence** product. Users enter an HTTP/HTTPS URL; the backend runs a **deterministic, staged scan** (DNS validation → TLS inspection → redirect chain → HTTP headers and passive signals → infrastructure fingerprinting → optional external reputation). The UI presents a **score, grade, threat level, confidence**, bilingual findings, and an **executive-style narrative**—either **Anthropic Claude** (when configured) or a **built-in deterministic fallback**—plus optional **VirusTotal** domain reputation when an API key is set.
+**CyberGurdian AI** is a **website security intelligence** product. Users enter an HTTP/HTTPS URL; the backend runs a **deterministic, staged scan** (DNS validation → TLS inspection → redirect chain → HTTP headers and passive signals → infrastructure fingerprinting → optional external reputation). The UI presents a **score, grade, threat level, security visibility**, bilingual findings, and an **executive-style narrative**—either **Anthropic Claude** (when configured) or a **built-in deterministic fallback**—plus optional **VirusTotal** domain reputation when an API key is set.
 
-The positioning (see `components/AboutPage.tsx`) is **explainable, evidence-based analysis**: correlate observable signals instead of treating reputation or missing headers as proof of compromise.
+The positioning (see `components/AboutPage.tsx`) is **explainable, evidence-based analysis**: correlate externally visible security signals instead of treating reputation or missing headers as proof of compromise.
 
 ---
 
@@ -43,14 +43,14 @@ The positioning (see `components/AboutPage.tsx`) is **explainable, evidence-base
 - **Security headers** checklist (HSTS, CSP, XFO, XCTO, Referrer-Policy, Permissions-Policy).
 - **Domain intelligence**: suspicious TLDs, punycode/IDN, typosquatting-style signals, phishing keywords, entropy, DNS risk framing, etc.
 - **Infrastructure fingerprinting**: passive detection (CDN, WAF, cloud, hosting, ASN, reverse proxy, framework, server exposure scoring, redirect trust).
-- **Weighted scoring** → numeric score, letter grade, threat level, confidence, **deterministic hash** (`lib/types.ts`).
+- **Weighted scoring** → numeric score, letter grade, threat level, security visibility, **deterministic hash** (`lib/types.ts`).
 - **Structured findings** with optional **`finding.id`** linking to **`lib/remediation.ts`** — bilingual remediation copy and **platform snippets** (Vercel, Nginx, Apache, Cloudflare) surfaced in **`ReportCard`**.
 - **Optional VirusTotal** reputation aggregates when configured.
 
 ### AI and reporting
 
 - **`POST /api/explain`**: accepts a validated `ScanResult`; returns bilingual **`AIExplanation`** (executive overview, attack surface, infrastructure trust, recommended actions).
-- **PDF export** (`generateCyberGuardianPdf` in `lib/pdf`) for the current locale, including scan metadata and narrative sections.
+- **PDF export** (`generateCyberGurdianPdf` in `lib/pdf`) for the current locale, including scan metadata and narrative sections.
 
 ### UX / i18n
 
@@ -70,10 +70,10 @@ The positioning (see `components/AboutPage.tsx`) is **explainable, evidence-base
 | Source | Version |
 |--------|---------|
 | **`package.json`** | **0.1.0** |
-| **UI** (`lib/i18n.ts`) | Hero badge **V1.5** (“Smart Protection System”); footer **CyberGurdian AI V1** |
+| **UI** (`lib/i18n.ts`) | Hero badge **V1.5.5** (“Smart Protection System”); footer version **V1.5.5** |
 | **PDF engine labels** (`lib/pdf.ts`) | Scanner / intelligence engine labels **v1.4** inside the PDF generator |
 
-Treat **npm 0.1.0** as the package semver; **V1.5 / V1** as **product marketing strings** (they are not fully aligned—consider harmonizing in a future pass).
+Treat **npm 0.1.0** as the package semver; product marketing version **V1.5.5** is defined in `lib/brand.ts`.
 
 ---
 

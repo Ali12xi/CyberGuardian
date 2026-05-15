@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
+import { BRAND, CANONICAL_SITE_URL, VERSION } from "@/lib/brand";
 import { LanguageProvider } from "@/components/LanguageProvider";
 import "./globals.css";
 
@@ -13,25 +14,69 @@ const cairo = Cairo({
   variable: "--font-cairo",
 });
 
+const siteDescription =
+  "CyberGurdian AI is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.";
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${CANONICAL_SITE_URL}#organization`,
+      name: BRAND,
+      url: CANONICAL_SITE_URL,
+      description: siteDescription,
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${CANONICAL_SITE_URL}#website`,
+      name: BRAND,
+      url: CANONICAL_SITE_URL,
+      description: siteDescription,
+      publisher: { "@id": `${CANONICAL_SITE_URL}#organization` },
+      inLanguage: ["en", "ar"],
+    },
+    {
+      "@type": "SoftwareApplication",
+      name: BRAND,
+      applicationCategory: "SecurityApplication",
+      operatingSystem: "Web",
+      description: siteDescription,
+      softwareVersion: VERSION,
+      provider: { "@id": `${CANONICAL_SITE_URL}#organization` },
+    },
+  ],
+};
+
 export const metadata: Metadata = {
+  metadataBase: new URL(CANONICAL_SITE_URL),
   title: {
     default: "CyberGurdian AI — Cybersecurity Intelligence Platform",
-    template: "%s | CyberGurdian AI",
+    template: `%s | ${BRAND}`,
   },
-  description:
-    "CyberGurdian AI is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.",
+  description: siteDescription,
+  manifest: "/manifest.json",
+  alternates: {
+    canonical: CANONICAL_SITE_URL,
+  },
   openGraph: {
     title: "CyberGurdian AI — Cybersecurity Intelligence Platform",
     description:
-      "AI-powered website security scanning with cybersecurity intelligence, human-readable threat insights, and executive-grade reporting.",
-    siteName: "CyberGurdian AI",
+      "CyberGurdian AI delivers AI-powered website security scanning, cybersecurity intelligence, and executive-grade reporting.",
+    siteName: BRAND,
     type: "website",
+    url: CANONICAL_SITE_URL,
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
     title: "CyberGurdian AI — Cybersecurity Intelligence Platform",
     description:
-      "Human-readable cybersecurity intelligence, AI-powered analysis, and deterministic website security scanning.",
+      "CyberGurdian AI — human-readable cybersecurity intelligence, deterministic website security scanning, and executive-grade reporting.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -43,6 +88,10 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr">
       <body className={`${inter.variable} ${cairo.variable}`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>

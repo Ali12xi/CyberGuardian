@@ -1,3 +1,5 @@
+/* RTL: see lib/rtl.ts — logical Tailwind + rtl: exceptions; URLs/numbers often dir="ltr". */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -34,6 +36,14 @@ html[dir="rtl"] .float-right {
   float: left;
 }
 
-.bidi-safe {
-  unicode-bidi: plaintext;
+.assessment-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .assessment-grid {
+    grid-template-columns: 1fr;
+  }
 }

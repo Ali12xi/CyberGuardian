@@ -10,7 +10,7 @@ import PDFDocument from "pdfkit";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outDir = path.join(root, "exports");
-const outPath = path.join(outDir, "cyberguardian-lib-sources.pdf");
+const outPath = path.join(outDir, "cybergurdianai-lib-sources.pdf");
 
 const FILES = ["lib/remediation.ts", "lib/pdf.ts", "lib/scanner.ts"];
 

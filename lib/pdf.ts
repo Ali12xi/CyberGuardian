@@ -1,7 +1,8 @@
-import type { Language, Translations } from "@/lib/i18n";
+import { BRAND, ENGINE_NAME, REPORT_FILENAME_PREFIX } from "@/lib/brand";
+import { formatSecurityVisibilityOverall, type Language, type Translations } from "@/lib/i18n";
 import type { AIExplanation, Finding, ScanResult } from "@/lib/types";
 
-type GenerateCyberGuardianPdfArgs = {
+export type GenerateCyberGurdianPdfArgs = {
   result: ScanResult;
   explanation: AIExplanation | null;
   language: Language;
@@ -25,7 +26,6 @@ const PAGE_WIDTH = 1240;
 const PAGE_HEIGHT = 1754;
 const PAGE_PADDING = 74;
 const CONTENT_WIDTH = PAGE_WIDTH - PAGE_PADDING * 2;
-const BRAND = "CyberGurdian AI";
 
 function getFont(language: Language, weight = 500, size = 28) {
   const family =
@@ -40,27 +40,10 @@ function escapePdfString(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
 }
 
-function sanitizeFilenamePart(value: string) {
-  const sanitized = value
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/[^a-z0-9.-]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
+function getExportPdfFilename() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 
-  return sanitized || "target";
-}
-
-function getSafeReportFilename(result: ScanResult) {
-  const target = sanitizeFilenamePart(
-    result.intelligence.domain || result.meta.finalUrl,
-  );
-  const date = new Date(result.meta.scanTimestamp)
-    .toISOString()
-    .slice(0, 10);
-
-  return `cybergurdian-ai-security-report-${target}-${date}.pdf`;
+  return `${REPORT_FILENAME_PREFIX}-${timestamp}.pdf`;
 }
 
 function getTextAlign(language: Language): CanvasTextAlign {
@@ -309,7 +292,7 @@ function createReportCanvases({
   explanation,
   language,
   t,
-}: GenerateCyberGuardianPdfArgs) {
+}: GenerateCyberGurdianPdfArgs) {
   const summary = explanation?.[language].executiveRiskOverview;
   const findings = result.findings.slice(0, 8);
 
@@ -322,15 +305,15 @@ function createReportCanvases({
         [
           `${t.domain}: ${result.intelligence.domain}`,
           `${t.pdfFinalUrl}: ${result.meta.finalUrl}`,
-          `${t.pdfSecurityScore}: ${result.score}/100 (${result.grade})`,
+          `${t.pdfSecurityScore}: ${result.score}/95 (${result.grade})`,
           `${t.risk}: ${result.threatLevel}`,
-          `${t.confidence}: ${result.confidence}%`,
+          `${t.securityVisibility}: ${formatSecurityVisibilityOverall(result.observableCoverage.overall, t)}`,
           `${t.scanTimestamp}: ${formatDate(result.meta.scanTimestamp, language)}`,
         ].join("\n"),
         { minHeight: 330 },
       );
 
-      drawCard(state, t.aiSummary, summary || t.defaultExecutiveLine, {
+      drawCard(state, t.executiveBrief, summary || t.defaultExecutiveLine, {
         minHeight: 230,
       });
 
@@ -388,7 +371,7 @@ function createReportCanvases({
         state,
         t.infrastructure,
         [
-          `${t.server}: ${result.meta.server || t.notDisclosed}`,
+          `${t.server} ${result.meta.server || t.notDisclosed}`,
           `CDN: ${result.infrastructure.cdn || t.unknown}`,
           `WAF: ${result.infrastructure.waf || t.unknown}`,
           `Cloud: ${result.infrastructure.cloudProvider || t.unknown}`,
@@ -463,7 +446,7 @@ function buildPdf(images: PdfPageImage[]) {
 
   object(infoId, () => {
     writeText(
-      `<< /Title (${escapePdfString(BRAND)} Security Report) /Producer (${escapePdfString(BRAND)}) >>`,
+      `<< /Title (${escapePdfString(`${BRAND} Security Report`)}) /Producer (${escapePdfString(ENGINE_NAME)}) >>`,
     );
   });
 
@@ -515,9 +498,7 @@ function downloadPdf(data: ArrayBuffer, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-export async function generateCyberGuardianPdf(
-  args: GenerateCyberGuardianPdfArgs,
-) {
+export async function generateCyberGurdianPdf(args: GenerateCyberGurdianPdfArgs) {
   if (typeof document === "undefined") {
     throw new Error("PDF export is available only in the browser.");
   }
@@ -531,5 +512,5 @@ export async function generateCyberGuardianPdf(
     })),
   );
 
-  downloadPdf(buildPdf(images), getSafeReportFilename(args.result));
+  downloadPdf(buildPdf(images), getExportPdfFilename());
 }

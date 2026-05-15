@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
 import ReportCard from "@/components/ReportCard";
 import UrlInput from "@/components/UrlInput";
-import type { AIExplanation, ExplainApiResponse, ScanResult } from "@/lib/types";
+import type { AIExplanation, AnalyzeOkPayload, ExplainApiResponse, ScanResult } from "@/lib/types";
 
 const STEP_DURATION_MS = 800;
 const FADE_DURATION_MS = 250;
@@ -89,10 +89,10 @@ function HowItWorksSection() {
       <h2 className="bidi-safe text-xl font-black tracking-tight text-slate-950 dark:text-white sm:text-2xl">
         {t.howItWorksTitle}
       </h2>
-      <div className="grid gap-3 sm:gap-4 md:grid-cols-3">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:flex-nowrap">
         {t.howItWorksCards.map((card, index) => (
           <article
-            className="group rounded-3xl border border-cyan-300/[0.11] bg-white/80 p-4 text-start shadow-lg shadow-cyan-950/[0.025] backdrop-blur-sm transition dark:bg-slate-950/65 dark:shadow-cyan-500/[0.018] sm:p-5"
+            className="group min-w-0 w-full flex-1 rounded-3xl border border-cyan-300/[0.11] bg-white/80 p-4 text-start shadow-lg shadow-cyan-950/[0.025] backdrop-blur-sm transition dark:bg-slate-950/65 dark:shadow-cyan-500/[0.018] sm:p-5 md:min-w-0 md:basis-0"
             key={card.title}
           >
             <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-2xl border border-cyan-300/[0.14] bg-cyan-300/[0.05] text-xs font-black text-cyan-700 dark:text-cyan-100">
@@ -115,6 +115,8 @@ export default function AnalyzePanel() {
   const { t } = useLanguage();
   const [result, setResult] = useState<ScanResult | null>(null);
   const [pendingResult, setPendingResult] = useState<ScanResult | null>(null);
+  const [scanId, setScanId] = useState("");
+  const [scanToken, setScanToken] = useState("");
   const [explanation, setExplanation] = useState<AIExplanation | null>(null);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -124,8 +126,11 @@ export default function AnalyzePanel() {
   const [formResetKey, setFormResetKey] = useState(0);
   const explanationRequestVersion = useRef(0);
 
+  const pendingScanTokenRef = useRef<string | null>(null);
+
   const generateExplanation = useCallback(async (
     scanResult: ScanResult,
+    scanToken: string,
     requestVersion: number,
   ) => {
     setAiLoading(true);
@@ -136,7 +141,7 @@ export default function AnalyzePanel() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ result: scanResult }),
+        body: JSON.stringify({ result: scanResult, scanToken }),
       });
       const data = (await response.json()) as ExplainApiResponse;
 
@@ -187,12 +192,11 @@ export default function AnalyzePanel() {
         setProgressStep(0);
 
         if (pendingResult) {
+          const token = pendingScanTokenRef.current ?? "";
           setResult(pendingResult);
           setPendingResult(null);
-          void generateExplanation(
-            pendingResult,
-            explanationRequestVersion.current,
-          );
+          pendingScanTokenRef.current = null;
+          void generateExplanation(pendingResult, token, explanationRequestVersion.current);
         }
       }, FADE_DURATION_MS);
     }, STEP_DURATION_MS);
@@ -202,6 +206,9 @@ export default function AnalyzePanel() {
 
   function handleScanStart() {
     explanationRequestVersion.current += 1;
+    pendingScanTokenRef.current = null;
+    setScanId("");
+    setScanToken("");
     setResult(null);
     setPendingResult(null);
     setExplanation(null);
@@ -211,8 +218,11 @@ export default function AnalyzePanel() {
     setProgressVisible(true);
   }
 
-  function handleScanComplete(scanResult: ScanResult) {
-    setPendingResult(scanResult);
+  function handleScanComplete(payload: AnalyzeOkPayload) {
+    pendingScanTokenRef.current = payload.scanToken;
+    setScanId(payload.scanId);
+    setScanToken(payload.scanToken);
+    setPendingResult(payload.result);
   }
 
   function handleLoadingChange(nextLoading: boolean) {
@@ -221,6 +231,9 @@ export default function AnalyzePanel() {
 
   function handleNewScan() {
     explanationRequestVersion.current += 1;
+    pendingScanTokenRef.current = null;
+    setScanId("");
+    setScanToken("");
     setResult(null);
     setPendingResult(null);
     setExplanation(null);
@@ -236,7 +249,7 @@ export default function AnalyzePanel() {
   const showPostScanAction = Boolean(result) && !progressVisible;
 
   return (
-    <div className="w-full min-w-0 space-y-5 sm:space-y-7">
+    <div className="w-full min-w-0 space-y-4 sm:space-y-6">
       <UrlInput
         key={formResetKey}
         onLoadingChange={handleLoadingChange}
@@ -261,6 +274,8 @@ export default function AnalyzePanel() {
           explanation={explanation}
           loading={loading}
           result={result}
+          scanId={scanId}
+          scanToken={scanToken}
         />
       )}
       {showPostScanAction ? (

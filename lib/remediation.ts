@@ -107,7 +107,7 @@ export const remediationMap = {
   "missing-hsts": {
     id: "missing-hsts",
     category: "https-security",
-    severity: "high",
+    severity: "medium",
     title: {
       en: "Missing HTTP Strict Transport Security",
       ar: "غياب سياسة HSTS",
@@ -127,8 +127,8 @@ export const remediationMap = {
       ar: "قد يتعرض المستخدمون على الشبكات العامة أو غير الموثوقة لمحاولات اعتراض قبل فرض الاتصال الآمن.",
     },
     severityReason: {
-      en: "This is high severity because it weakens HTTPS enforcement and can enable downgrade-style attacks.",
-      ar: "تُعد المشكلة عالية الخطورة لأنها تضعف فرض HTTPS وقد تسمح بهجمات خفض مستوى الاتصال.",
+      en: "This is medium severity for scan reporting: it weakens HTTPS enforcement, but absence on a single response is not equivalent to a confirmed exploitable incident.",
+      ar: "تُعد المشكلة متوسطة الخطورة في التقرير لأنها تضعف فرض HTTPS، لكن غياب الرأس في استجابة واحدة لا يعادل حادثًا قابلاً للاستغلال مؤكدًا.",
     },
     recommendation: {
       en: "Enable HSTS with a long max-age after confirming that every page and subdomain works correctly over HTTPS.",
@@ -144,12 +144,12 @@ export const remediationMap = {
       en: "15 minutes",
       ar: "15 دقيقة",
     },
-    riskReduction: "high",
+    riskReduction: "medium",
   },
   "missing-csp": {
     id: "missing-csp",
     category: "header-protection",
-    severity: "high",
+    severity: "medium",
     title: {
       en: "Missing Content Security Policy",
       ar: "غياب Content Security Policy",
@@ -169,8 +169,8 @@ export const remediationMap = {
       ar: "قد يؤدي نجاح حقن محتوى ضار إلى إساءة استخدام الحسابات أو سرقة الجلسات أو إضعاف ثقة المستخدمين.",
     },
     severityReason: {
-      en: "This is high severity because CSP is a major browser control that limits the impact of several common web attacks.",
-      ar: "تُعد المشكلة عالية الخطورة لأن CSP من أهم ضوابط المتصفح التي تحد من أثر عدة هجمات ويب شائعة.",
+      en: "This is medium severity for scan reporting: CSP is an important browser control, but missing CSP on one fetched surface is often edge-managed or policy-split across responses.",
+      ar: "تُعد المشكلة متوسطة الخطورة في التقرير لأن CSP ضابط مهم، لكن غيابه على سطح استجابة واحد قد يكون مُدارًا عبر Edge أو موزعًا بين استجابات.",
     },
     recommendation: {
       en: "Start with a restrictive policy for default sources, scripts, frames, objects, and base URI, then expand only for trusted services.",
@@ -186,7 +186,7 @@ export const remediationMap = {
       en: "1-2 hours",
       ar: "ساعة إلى ساعتين",
     },
-    riskReduction: "high",
+    riskReduction: "medium",
   },
   "missing-x-frame-options": {
     id: "missing-x-frame-options",
@@ -242,7 +242,7 @@ export const remediationMap = {
   "missing-x-content-type-options": {
     id: "missing-x-content-type-options",
     category: "header-protection",
-    severity: "medium",
+    severity: "low",
     title: {
       en: "Missing MIME Sniffing Protection",
       ar: "غياب حماية MIME Sniffing",
@@ -262,8 +262,8 @@ export const remediationMap = {
       ar: "قد يتحول خطأ في التعامل مع المحتوى إلى مشكلة أمنية إذا فُسرت الملفات المرفوعة أو المحملة بشكل غير آمن.",
     },
     severityReason: {
-      en: "This is medium severity because the fix is simple and prevents a known class of browser misinterpretation attacks.",
-      ar: "تُعد المشكلة متوسطة الخطورة لأن إصلاحها بسيط ويمنع نوعًا معروفًا من هجمات سوء تفسير المتصفح للمحتوى.",
+      en: "This is low severity for scan reporting: the fix is simple and reduces MIME sniffing risk, but impact is typically limited compared with transport or authentication failures.",
+      ar: "تُعد المشكلة منخفضة الخطورة في التقرير لأن الإصلاح بسيط ويقلل مخاطر MIME sniffing، لكن الأثر عادةً أقل مقارنةً بفشل النقل أو المصادقة.",
     },
     recommendation: {
       en: "Set X-Content-Type-Options to nosniff on all responses.",
@@ -701,7 +701,7 @@ RewriteRule ^ https://example.com%{REQUEST_URI} [R=301,L]`,
       },
       technical: {
         en: "Server, framework, or platform headers expose implementation details that can help attackers prioritize known weaknesses.",
-        ar: "رؤوس Server أو Framework أو المنصة تكشف تفاصيل تنفيذية قد تساعد المهاجمين على ترتيب الثغرات المعروفة حسب الأولوية.",
+        ar: "رؤوس الخادم (Server) أو الإطار (Framework) أو المنصة تكشف تفاصيل تنفيذية قد تساعد المهاجمين على ترتيب الثغرات المعروفة حسب الأولوية.",
       },
     },
     businessImpact: {
@@ -714,7 +714,7 @@ RewriteRule ^ https://example.com%{REQUEST_URI} [R=301,L]`,
     },
     recommendation: {
       en: "Remove unnecessary server and framework headers, and keep operational diagnostics internal.",
-      ar: "أزل رؤوس Server وFramework غير الضرورية، واجعل معلومات التشخيص التشغيلية داخلية.",
+      ar: "أزل رؤوس الخادم والإطار غير الضرورية، واجعل معلومات التشخيص التشغيلية داخلية.",
     },
     codeExamples: {
       nginx: `server_tokens off;`,

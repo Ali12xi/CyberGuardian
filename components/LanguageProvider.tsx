@@ -8,6 +8,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { LANGUAGE_STORAGE_KEY } from "@/lib/brand";
 import {
   getDirection,
   Language,
@@ -15,6 +16,8 @@ import {
   type Direction,
   type Translations,
 } from "@/lib/i18n";
+
+const LEGACY_LANGUAGE_STORAGE_KEY = "cyberguardian-language";
 
 type LanguageContextValue = {
   language: Language;
@@ -29,7 +32,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>("en");
 
   useEffect(() => {
-    const storedLanguage = window.localStorage.getItem("cyberguardian-language");
+    const storedLanguage =
+      window.localStorage.getItem(LANGUAGE_STORAGE_KEY) ??
+      window.localStorage.getItem(LEGACY_LANGUAGE_STORAGE_KEY);
 
     if (storedLanguage === "ar" || storedLanguage === "en") {
       setLanguageState(storedLanguage);
@@ -45,7 +50,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   function setLanguage(nextLanguage: Language) {
     setLanguageState(nextLanguage);
-    window.localStorage.setItem("cyberguardian-language", nextLanguage);
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
   }
 
   const value = useMemo(

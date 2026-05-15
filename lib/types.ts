@@ -1,5 +1,6 @@
 export type Severity = "critical" | "high" | "medium" | "low" | "informational";
 export type ThreatLevel = "low" | "medium" | "high" | "critical";
+export type Grade = "A" | "B" | "C" | "D" | "F";
 export type ScanStageName =
   | "dns"
   | "tls"
@@ -64,11 +65,58 @@ export type RedirectStep = {
   statusCode: number;
 };
 
+/** How redirect behavior should influence scoring and threat (intent-based, not binary). */
+export type RedirectIntent = "standard" | "infrastructure" | "suspicious";
+
+export type RedirectAnalysis = {
+  hops: number;
+  intent: RedirectIntent;
+  /** URLs visited in order (matches `redirects.chain` steps). */
+  chain: string[];
+  /** True when any consecutive step moves between different registrable domains (observability signal). */
+  crossDomain: boolean;
+};
+
+export type ScoreItem = {
+  id: string;
+  label: string;
+  labelAr: string;
+  value: number;
+  reason: string;
+};
+
+export type AttenuationProfile =
+  | "standard"
+  | "edge-managed"
+  | "enterprise-edge"
+  | "limited-observability";
+
+export type ScoreBreakdown = {
+  positives: ScoreItem[];
+  penalties: ScoreItem[];
+  ceilings: ScoreItem[];
+  rawScore: number;
+  finalScore: number;
+  grade: Grade;
+  attenuationProfile: AttenuationProfile;
+  /** Same values as `ScanResult.redirects.analysis` for PDF/AI/score transparency. */
+  redirectAnalysis: RedirectAnalysis;
+};
+
+export type ObservableCoverage = {
+  tls: "full" | "partial" | "failed";
+  headers: "full" | "partial" | "failed";
+  infrastructure: "full" | "partial" | "limited";
+  reputation: "full" | "not-checked";
+  overall: "full" | "partial" | "limited";
+};
+
 export type ScanResult = {
   score: number;
-  grade: string;
-  confidence: number;
+  grade: Grade;
   threatLevel: ThreatLevel;
+  scoreBreakdown: ScoreBreakdown;
+  observableCoverage: ObservableCoverage;
   deterministicHash: string;
   ssl: {
     valid: boolean;
@@ -111,7 +159,9 @@ export type ScanResult = {
   reputation: ReputationResult | null;
   redirects: {
     chain: RedirectStep[];
+    /** @deprecated Prefer `analysis.intent === "suspicious"`; kept for backward compatibility. */
     suspicious: boolean;
+    analysis: RedirectAnalysis;
   };
   meta: {
     responseTime: number;
@@ -140,6 +190,8 @@ export type AnalyzeApiResponse =
   | {
       ok: true;
       result: ScanResult;
+      scanId: string;
+      scanToken: string;
     }
   | {
       ok: false;
@@ -148,6 +200,11 @@ export type AnalyzeApiResponse =
         ar: string;
       };
     };
+
+export type AnalyzeOkPayload = Pick<
+  Extract<AnalyzeApiResponse, { ok: true }>,
+  "result" | "scanId" | "scanToken"
+>;
 
 export type ExplainApiResponse =
   | {

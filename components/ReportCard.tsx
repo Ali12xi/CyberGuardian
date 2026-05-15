@@ -1,59 +1,128 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { generateCyberGuardianPdf } from "@/lib/pdf";
-import { getRemediationById, type RemediationEntry } from "@/lib/remediation";
+import type { Language, Translations } from "@/lib/i18n";
+import DownloadReportButton from "@/components/DownloadReportButton";
+import { ScoreBreakdown } from "@/components/ScoreBreakdown";
+import { getBusinessImpact } from "@/lib/businessImpact";
+import { getFindingExplanation } from "@/lib/findingExplanations";
+import type { EffortBandKey } from "@/lib/fixSnippets";
+import {
+  getActionPlanEffortBandKey,
+  getFixTimeEstimate,
+  type FixPlatform,
+} from "@/lib/fixSnippets";
+import { DIFFICULTY_LABELS } from "@/lib/findingFixes";
+import { getRemediationById } from "@/lib/remediation";
+import { resolveTechnicalFix } from "@/lib/technicalFixResolver";
 import type { AIExplanation, Finding, ScanResult } from "@/lib/types";
+import {
+  entropyStatusIcon,
+  getEntropyBand,
+  getEntropyExplanation,
+  getPunycodeExplanation,
+  getReputationExplanation,
+  getSuspiciousTldExplanation,
+  getTyposquattingExplanation,
+  reputationStatusIcon,
+} from "@/lib/domainSignals";
+import { getTechnologyContextLine, techRiskLabel } from "@/lib/techContext";
 
 type ReportCardProps = {
   result: ScanResult | null;
   loading: boolean;
   explanation: AIExplanation | null;
   aiLoading: boolean;
+  scanId?: string;
+  scanToken?: string;
 };
 
-type PlatformKey = keyof RemediationEntry["codeExamples"];
+function effortBandLabel(t: Translations, key: EffortBandKey): string {
+  switch (key) {
+    case "none":
+      return t.effortBandNone;
+    case "minimal":
+      return t.effortBandMinimal;
+    case "light":
+      return t.effortBandLight;
+    case "moderate":
+      return t.effortBandModerate;
+    case "heavy":
+      return t.effortBandHeavy;
+    case "severe":
+      return t.effortBandSevere;
+    default:
+      return t.effortBandLight;
+  }
+}
 
-const PLATFORM_LABELS: Record<PlatformKey, string> = {
-  vercel: "Vercel",
-  nginx: "Nginx",
-  apache: "Apache",
-  cloudflare: "Cloudflare",
+function interpolate(template: string, vars: Record<string, string | number>): string {
+  return Object.keys(vars).reduce(
+    (acc, k) => acc.replaceAll(`{${k}}`, String(vars[k])),
+    template,
+  );
+}
+
+const SEVERITY_ORDER: Record<Finding["severity"], number> = {
+  critical: 0,
+  high: 1,
+  medium: 2,
+  low: 3,
+  informational: 4,
 };
 
-const FIX_LABELS = {
-  en: {
-    businessImpact: "Business Impact",
-    howToFix: "How to Fix",
-    copy: "Copy",
-    copied: "Copied",
-    estimatedFixTime: "Fix time",
-    difficulty: "Difficulty",
-    riskReduction: "Risk reduction",
-    easy: "Easy",
-    medium: "Medium",
-    hard: "Hard",
-    high: "High",
-    low: "Low",
-    advisory: "Recommended action",
-  },
-  ar: {
-    businessImpact: "التأثير على الموقع",
-    howToFix: "طريقة الإصلاح",
-    copy: "نسخ",
-    copied: "تم النسخ",
-    estimatedFixTime: "وقت الإصلاح",
-    difficulty: "الصعوبة",
-    riskReduction: "تقليل الخطر",
-    easy: "سهل",
-    medium: "متوسط",
-    hard: "صعب",
-    high: "مرتفع",
-    low: "منخفض",
-    advisory: "الإجراء الموصى به",
-  },
-} as const;
+function sortFindingsBySeverity(findings: Finding[]): Finding[] {
+  return [...findings].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+}
+
+function topFindings(findings: Finding[], limit: number): Finding[] {
+  return sortFindingsBySeverity(findings).slice(0, limit);
+}
+
+function firstOverviewSentence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return "";
+  }
+  const match = trimmed.match(/^[^.!?…]+[.!?…]?/);
+  const first = (match ? match[0] : trimmed.split("\n")[0] ?? trimmed).trim();
+  return first.length > 320 ? `${first.slice(0, 317)}…` : first;
+}
+
+function scanWallClockMs(result: ScanResult): number | null {
+  const ms = result.meta.responseTime;
+  return typeof ms === "number" && ms > 0 ? ms : null;
+}
+
+function findingSeverityDot(severity: Finding["severity"]): string {
+  if (severity === "critical" || severity === "high") {
+    return "🔴";
+  }
+  if (severity === "medium") {
+    return "🟡";
+  }
+  return "🟢";
+}
+
+function entropyBandWord(band: ReturnType<typeof getEntropyBand>, language: Language): string {
+  if (language === "ar") {
+    if (band === "high") {
+      return "مرتفع";
+    }
+    if (band === "elevated") {
+      return "مرتفع نسبياً";
+    }
+    return "طبيعي";
+  }
+  if (band === "high") {
+    return "High";
+  }
+  if (band === "elevated") {
+    return "Elevated";
+  }
+  return "Normal";
+}
 
 function formatHeaderName(header: string) {
   return header
@@ -110,6 +179,29 @@ function gradeColor(grade: string) {
   return "text-red-300";
 }
 
+function formatScanTimestamp(iso: string, language: Language): { date: string; time: string } {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) {
+    return { date: iso, time: "" };
+  }
+
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const date = `${y}/${mo}/${day}`;
+
+  const h24 = d.getHours();
+  const minutes = d.getMinutes();
+  const isPm = h24 >= 12;
+  const h12 = h24 % 12 || 12;
+  const hh = String(h12).padStart(2, "0");
+  const mm = String(minutes).padStart(2, "0");
+  const time =
+    language === "ar" ? `${hh}:${mm}\u00a0${isPm ? "م" : "ص"}` : `${hh}:${mm}\u00a0${isPm ? "PM" : "AM"}`;
+
+  return { date, time };
+}
+
 function getThreatLabel(threatLevel: string, t: ReturnType<typeof useLanguage>["t"]) {
   if (threatLevel === "low") {
     return t.lowThreat;
@@ -120,6 +212,19 @@ function getThreatLabel(threatLevel: string, t: ReturnType<typeof useLanguage>["
   }
 
   return t.highThreat;
+}
+
+function getSecurityVisibilityCardValue(
+  overall: "full" | "partial" | "limited",
+  t: ReturnType<typeof useLanguage>["t"],
+) {
+  if (overall === "full") {
+    return t.visibilityCardHigh;
+  }
+  if (overall === "partial") {
+    return t.visibilityCardPartial;
+  }
+  return t.visibilityCardLimited;
 }
 
 function getThreatDetected(threatLevel: string, t: ReturnType<typeof useLanguage>["t"]) {
@@ -145,7 +250,7 @@ function infrastructureTrust(result: ScanResult, t: ReturnType<typeof useLanguag
   if (
     result.intelligence.reputation === "trusted" &&
     result.ssl.valid &&
-    result.confidence >= 80
+    result.observableCoverage.overall === "full"
   ) {
     return {
       label: t.highInfrastructureTrust,
@@ -183,14 +288,6 @@ function getExecutiveLine(
   }
 
   return t.defaultExecutiveLine;
-}
-
-function getCriticalFindings(findings: Finding[]) {
-  const critical = findings.filter(
-    (finding) => finding.severity === "critical" || finding.severity === "high",
-  );
-
-  return critical.length > 0 ? critical : findings.slice(0, 3);
 }
 
 function localizedBoolean(value: boolean, t: ReturnType<typeof useLanguage>["t"]) {
@@ -251,86 +348,346 @@ function SeverityBadge({ severity }: { severity: Finding["severity"] }) {
   );
 }
 
-function getAvailableCodeTabs(codeExamples: RemediationEntry["codeExamples"]) {
-  return (Object.keys(PLATFORM_LABELS) as PlatformKey[])
-    .map((key) => ({
-      key,
-      label: PLATFORM_LABELS[key],
-      code: codeExamples[key],
-    }))
-    .filter((tab): tab is { key: PlatformKey; label: string; code: string } =>
-      Boolean(tab.code),
-    );
-}
-
-function MetadataBadge({ label, value }: { label: string; value: string }) {
-  return (
-    <span className="bidi-safe inline-flex min-h-8 items-center rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-3 py-1 text-[11px] font-semibold leading-5 text-cyan-100/90">
-      <span className="text-slate-400">{label}:</span>
-      <span className="ms-1 text-slate-100">{value}</span>
-    </span>
-  );
-}
-
 function FindingCard({
   finding,
   index,
+  result,
 }: {
   finding: Finding;
   index: number;
+  result: ScanResult;
 }) {
-  const { direction, language } = useLanguage();
-  const labels = FIX_LABELS[language];
+  const VISIBLE_PLATFORM_TABS = 3;
+
+  const { direction, language, t } = useLanguage();
   const remediation = useMemo(
     () => (finding.id ? getRemediationById(finding.id) : undefined),
     [finding.id],
   );
-  const tabs = useMemo(
-    () => (remediation ? getAvailableCodeTabs(remediation.codeExamples) : []),
-    [remediation],
+  const explanation = useMemo(
+    () => (finding.id ? getFindingExplanation(finding.id) : undefined),
+    [finding.id],
   );
-  const [activeTabKey, setActiveTabKey] = useState<PlatformKey | null>(
-    tabs[0]?.key ?? null,
+  const biz = useMemo(
+    () => (finding.id ? getBusinessImpact(finding.id) : undefined),
+    [finding.id],
   );
-  const [copied, setCopied] = useState(false);
-  const activeTab = tabs.find((tab) => tab.key === activeTabKey) ?? tabs[0];
+  const resolved = useMemo(
+    () => resolveTechnicalFix(result, finding.id, remediation),
+    [result, finding.id, remediation],
+  );
+  const { snippets, findingFix, detected } = resolved;
 
-  if (!remediation) {
-    return (
-      <div
-        className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm sm:bg-white/[0.04] sm:p-5"
-        key={`${finding.severity}-${index}`}
-      >
-        <div className="flex w-full justify-start" dir={direction}>
-          <SeverityBadge severity={finding.severity} />
-        </div>
-        <p
-          className="bidi-safe mt-4 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-200"
-          dir={language === "ar" ? "rtl" : "ltr"}
-        >
-          {finding.message[language]}
-        </p>
-        {finding.impact ? (
-          <p
-            className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-xs leading-6 text-slate-300 sm:text-slate-400"
-            dir={language === "ar" ? "rtl" : "ltr"}
-          >
-            {finding.impact[language]}
-          </p>
-        ) : null}
-      </div>
-    );
-  }
+  const [activePlatform, setActivePlatform] = useState<FixPlatform | null>(null);
+  useEffect(() => {
+    setActivePlatform(snippets[0]?.platform ?? null);
+  }, [finding.id, snippets]);
 
-  async function handleCopy() {
-    if (!activeTab?.code || !navigator.clipboard) {
+  const activeSnippet =
+    snippets.find((s) => s.platform === activePlatform) ?? snippets[0] ?? null;
+
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const copyKeyPrefix = finding.id ?? `finding-${index}`;
+
+  const fixTimeShort = finding.id ? getFixTimeEstimate(finding.id) : undefined;
+  const displayFixTime = fixTimeShort ?? remediation?.estimatedFixTime[language];
+
+  const plainText =
+    language === "ar"
+      ? (explanation?.plainAr ?? remediation?.explanation.simple.ar ?? finding.message.ar)
+      : (explanation?.plainEn ?? remediation?.explanation.simple.en ?? finding.message.en);
+
+  const whyMatters =
+    language === "ar"
+      ? (explanation?.whyMattersAr ?? remediation?.explanation.technical.ar)
+      : (explanation?.whyMattersEn ?? remediation?.explanation.technical.en);
+
+  const businessLine =
+    biz !== undefined
+      ? language === "ar"
+        ? biz.ar
+        : biz.en
+      : (remediation?.businessImpact[language] ?? finding.impact?.[language]);
+
+  const title = remediation?.title[language] ?? finding.message[language];
+
+  const priorityLabel =
+    finding.severity === "critical" || finding.severity === "high"
+      ? t.priorityLevelImmediate
+      : finding.severity === "medium"
+        ? t.priorityLevelThisWeek
+        : t.priorityLevelLater;
+
+  const diffDef = findingFix ? DIFFICULTY_LABELS[findingFix.difficulty] : null;
+  const diffShort = diffDef ? (language === "ar" ? diffDef.ar : diffDef.en) : null;
+  const diffDesc = diffDef ? (language === "ar" ? diffDef.descriptionAr : diffDef.descriptionEn) : null;
+
+  async function copyActiveSnippet() {
+    if (!activeSnippet?.code) {
       return;
     }
 
-    await navigator.clipboard.writeText(activeTab.code);
-    setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    const id = `${copyKeyPrefix}::${activeSnippet.platform}`;
+    try {
+      await navigator.clipboard.writeText(activeSnippet.code);
+      setCopiedId(id);
+      window.setTimeout(() => setCopiedId(null), 2000);
+    } catch {
+      /* ignore clipboard failures */
+    }
   }
+
+  const visibleSnippets = snippets.slice(0, VISIBLE_PLATFORM_TABS);
+  const overflowSnippets = snippets.slice(VISIBLE_PLATFORM_TABS);
+  const hasOverflow = overflowSnippets.length > 0;
+  const copyActiveId = activeSnippet ? `${copyKeyPrefix}::${activeSnippet.platform}` : null;
+
+  const layer1 = (
+    <>
+      <p
+        className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-200"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        {plainText}
+      </p>
+      {whyMatters ? (
+        <p
+          className="bidi-safe mt-2 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-300"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          <span className="font-semibold text-slate-200">{t.whyThisMattersLabel}</span>{" "}
+          {whyMatters}
+        </p>
+      ) : null}
+    </>
+  );
+
+  const layer2 = (
+    <div className="mt-4 rounded-2xl border border-cyan-300/[0.12] bg-cyan-300/[0.045] p-3">
+      <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+        {t.layerBusinessImpact}
+      </p>
+      <p
+        className="bidi-safe mt-2 text-start text-xs font-bold leading-6 text-amber-100/95"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        {priorityLabel}
+      </p>
+      {displayFixTime ? (
+        <p className="bidi-safe mt-2 text-start text-xs leading-6 text-slate-200" dir="ltr">
+          ⏱ {displayFixTime}
+        </p>
+      ) : null}
+      {businessLine !== undefined ? (
+        <p
+          className="bidi-safe mt-2 overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          💼 {businessLine}
+        </p>
+      ) : null}
+    </div>
+  );
+
+  const technicalDetails = (
+    <details className="group mt-4 rounded-2xl border border-white/10 bg-slate-950/50 transition open:border-cyan-300/25 open:bg-cyan-300/[0.035]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-start text-sm font-bold text-slate-100">
+        <span className="bidi-safe min-w-0">
+          🔧 {t.technicalFix}
+        </span>
+        <span className="shrink-0 text-cyan-200 transition duration-200 group-open:rotate-180">
+          ⌄
+        </span>
+      </summary>
+      <div className="space-y-4 border-t border-white/10 px-3 pb-3 pt-4">
+        {remediation ? (
+          <p
+            className="bidi-safe overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            {remediation.recommendation[language]}
+          </p>
+        ) : finding.remediation ? (
+          <p
+            className="bidi-safe overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            {finding.remediation[language]}
+          </p>
+        ) : null}
+
+        {findingFix && (diffShort || displayFixTime) ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <div className="min-w-0 text-start" dir={language === "ar" ? "rtl" : "ltr"}>
+              <p className="bidi-safe text-[11px] leading-5 text-slate-400">
+                <span className="font-bold text-slate-300">{t.difficultyLabel}</span>{" "}
+                {diffShort ? (
+                  <>
+                    <span className="text-slate-200">{diffShort}</span>
+                    {displayFixTime ? (
+                      <span className="tabular-nums text-slate-300" dir="ltr">
+                        {" "}
+                        · {displayFixTime}
+                      </span>
+                    ) : null}
+                  </>
+                ) : (
+                  displayFixTime && (
+                    <span className="tabular-nums text-slate-200" dir="ltr">
+                      ⏱ {displayFixTime}
+                    </span>
+                  )
+                )}
+              </p>
+              {diffDesc ? (
+                <p className="bidi-safe mt-1 text-[11px] leading-4 text-slate-500">{diffDesc}</p>
+              ) : null}
+            </div>
+            {detected.detected &&
+            activeSnippet &&
+            activeSnippet.platform === detected.primary ? (
+              <span
+                className="inline-flex max-w-full shrink-0 items-center self-start rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold leading-none text-emerald-200/95 sm:self-center"
+                dir="ltr"
+              >
+                {detected.label ? `${detected.label} · ` : ""}
+                {t.detectedPlatform}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        {snippets.length > 0 ? (
+          <>
+            <p className="bidi-safe text-start text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+              {t.recommendedForStack}
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {visibleSnippets.map((tab) => {
+                const active = tab.platform === activePlatform;
+                const markDetected = detected.detected && tab.platform === detected.primary;
+
+                return (
+                  <button
+                    className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                      active
+                        ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
+                        : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-cyan-300/20 hover:text-slate-200"
+                    }`}
+                    key={tab.platform}
+                    type="button"
+                    onClick={() => setActivePlatform(tab.platform)}
+                  >
+                    {tab.label}
+                    {markDetected ? " ✓" : ""}
+                  </button>
+                );
+              })}
+            </div>
+
+            {hasOverflow ? (
+              <details className="rounded-xl border border-white/10 bg-white/[0.03] px-2 py-1">
+                <summary className="cursor-pointer list-none px-2 py-2 text-start text-xs font-bold text-slate-300 marker:hidden [&::-webkit-details-marker]:hidden">
+                  {t.otherPlatforms}
+                  <span className="ms-1 text-cyan-300/80">▾</span>
+                </summary>
+                <div className="flex flex-wrap gap-2 border-t border-white/5 px-2 pb-2 pt-2">
+                  {overflowSnippets.map((tab) => {
+                    const active = tab.platform === activePlatform;
+                    const markDetected = detected.detected && tab.platform === detected.primary;
+
+                    return (
+                      <button
+                        className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
+                          active
+                            ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
+                            : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-cyan-300/20 hover:text-slate-200"
+                        }`}
+                        key={tab.platform}
+                        type="button"
+                        onClick={() => setActivePlatform(tab.platform)}
+                      >
+                        {tab.label}
+                        {markDetected ? " ✓" : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
+            ) : null}
+
+            {activeSnippet ? (
+              <>
+                <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                  {t.placeInsideLabel}
+                </p>
+                <p
+                  className="bidi-safe -mt-2 text-start text-xs leading-6 text-slate-300"
+                  dir={language === "ar" ? "rtl" : "ltr"}
+                >
+                  {language === "ar" ? activeSnippet.placementAr : activeSnippet.placement}
+                </p>
+
+                <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
+                  <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
+                    <span className="min-w-0 truncate text-xs font-bold text-slate-400">
+                      {activeSnippet.label}
+                    </span>
+                    <button
+                      className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1 text-xs font-bold text-cyan-100 transition hover:bg-cyan-300/[0.1]"
+                      type="button"
+                      onClick={copyActiveSnippet}
+                    >
+                      {copyActiveId && copiedId === copyActiveId ? t.copiedSnippet : t.copySnippet}
+                    </button>
+                  </div>
+                  <pre
+                    className="max-w-full whitespace-pre-wrap break-words p-3 text-xs leading-relaxed text-slate-200 [overflow-wrap:anywhere]"
+                    dir="ltr"
+                  >
+                    <code>{activeSnippet.code}</code>
+                  </pre>
+                </div>
+              </>
+            ) : null}
+
+            {findingFix?.disclaimer ? (
+              <p
+                className="bidi-safe rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-[11px] leading-5 text-amber-100/95"
+                dir={language === "ar" ? "rtl" : "ltr"}
+              >
+                ⚠ {language === "ar" ? findingFix.disclaimerAr ?? findingFix.disclaimer : findingFix.disclaimer}
+              </p>
+            ) : null}
+
+            {findingFix && findingFix.risksReduced.length > 0 ? (
+              <div>
+                <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                  {t.fixesRisksLabel}
+                </p>
+                <ul className="mt-2 space-y-1.5 text-start text-xs leading-5 text-slate-300">
+                  {(language === "ar" ? findingFix.risksReducedAr : findingFix.risksReduced).map((line) => (
+                    <li className="bidi-safe flex gap-2" dir={language === "ar" ? "rtl" : "ltr"} key={line}>
+                      <span className="shrink-0 text-emerald-400/90">✓</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p
+            className="bidi-safe text-start text-xs leading-6 text-slate-400"
+            dir={language === "ar" ? "rtl" : "ltr"}
+          >
+            {t.noSnippetForFinding}
+          </p>
+        )}
+      </div>
+    </details>
+  );
 
   return (
     <div
@@ -338,171 +695,49 @@ function FindingCard({
       key={`${finding.id ?? finding.severity}-${index}`}
     >
       <div className="flex min-w-0 flex-col gap-3">
-        <div className="flex w-full justify-start" dir={direction}>
+        <div className="flex w-full flex-wrap items-center gap-2" dir={direction}>
           <SeverityBadge severity={finding.severity} />
+          {displayFixTime ? (
+            <span
+              className="inline-flex h-7 items-center rounded-full border border-white/10 bg-white/[0.06] px-3 text-[11px] font-bold tabular-nums leading-none text-slate-200"
+              dir="ltr"
+            >
+              {displayFixTime}
+            </span>
+          ) : null}
         </div>
         <h4
           className="bidi-safe w-full overflow-hidden break-words text-start text-sm font-bold leading-7 text-slate-100"
           dir={language === "ar" ? "rtl" : "ltr"}
         >
-          {finding.message[language]}
+          {title}
         </h4>
       </div>
 
-      <p
-        className="bidi-safe mt-3 w-full overflow-hidden break-words text-start text-sm leading-7 text-slate-300"
-        dir={language === "ar" ? "rtl" : "ltr"}
-      >
-        {remediation.explanation.simple[language]}
-      </p>
-
-      <div className="mt-4 rounded-2xl border border-cyan-300/[0.12] bg-cyan-300/[0.045] p-3">
-        <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200/90">
-          {labels.businessImpact}
-        </p>
-        <p
-          className="bidi-safe mt-2 overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
-          dir={language === "ar" ? "rtl" : "ltr"}
-        >
-          {remediation.businessImpact[language]}
-        </p>
-      </div>
-
-      <details className="group mt-4 rounded-2xl border border-white/10 bg-slate-950/50 transition open:border-cyan-300/25 open:bg-cyan-300/[0.035]">
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-3 text-start text-sm font-bold text-slate-100">
-          <span className="bidi-safe min-w-0">{labels.howToFix}</span>
-          <span className="shrink-0 text-cyan-200 transition duration-200 group-open:rotate-180">
-           ⌄
-          </span>
-        </summary>
-        <div className="space-y-4 border-t border-white/10 px-3 pb-3 pt-4">
-          <p className="bidi-safe text-start text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            {labels.advisory}
-          </p>
-          <p
-            className="bidi-safe overflow-hidden break-words text-start text-xs leading-6 text-slate-300"
-            dir={language === "ar" ? "rtl" : "ltr"}
-          >
-            {remediation.recommendation[language]}
-          </p>
-
-          {tabs.length > 0 ? (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {tabs.map((tab) => {
-                  const active = tab.key === activeTab?.key;
-
-                  return (
-                    <button
-                      className={`rounded-full border px-3 py-1.5 text-xs font-bold transition ${
-                        active
-                          ? "border-cyan-300/35 bg-cyan-300/10 text-cyan-100"
-                          : "border-white/10 bg-white/[0.04] text-slate-400 hover:border-cyan-300/20 hover:text-slate-200"
-                      }`}
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setActiveTabKey(tab.key)}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="overflow-hidden rounded-2xl border border-white/10 bg-slate-950/80">
-                <div className="flex items-center justify-between gap-3 border-b border-white/10 px-3 py-2">
-                  <span className="text-xs font-bold text-slate-400">
-                    {activeTab?.label}
-                  </span>
-                  <button
-                    className="rounded-full border border-cyan-300/20 bg-cyan-300/[0.06] px-3 py-1 text-xs font-bold text-cyan-100 transition hover:bg-cyan-300/[0.1]"
-                    type="button"
-                    onClick={handleCopy}
-                  >
-                    {copied ? labels.copied : labels.copy}
-                  </button>
-                </div>
-                <pre
-                  className="max-w-full overflow-x-auto p-3 text-xs leading-6 text-slate-200"
-                  dir="ltr"
-                >
-                  <code>{activeTab?.code}</code>
-                </pre>
-              </div>
-            </>
-          ) : null}
-
-          <div className="flex flex-wrap gap-2">
-            <MetadataBadge
-              label={labels.estimatedFixTime}
-              value={remediation.estimatedFixTime[language]}
-            />
-            <MetadataBadge
-              label={labels.difficulty}
-              value={labels[remediation.difficulty]}
-            />
-            <MetadataBadge
-              label={labels.riskReduction}
-              value={labels[remediation.riskReduction]}
-            />
-          </div>
-        </div>
-      </details>
+      {layer1}
+      {layer2}
+      {technicalDetails}
     </div>
   );
 }
 
-function ScanTimeline({
-  result,
-  aiComplete,
-}: {
-  result: ScanResult;
-  aiComplete: boolean;
-}) {
-  const { t, direction } = useLanguage();
-  const stages = [
-    t.stages.dns,
-    t.stages.tls,
-    t.stages.redirects,
-    t.stages.headers,
-    t.stages.threat,
-    aiComplete ? t.stages.aiDone : t.stages.aiProgress,
-  ];
+function ScanTimingLine({ result }: { result: ScanResult }) {
+  const { t } = useLanguage();
+  const ms = scanWallClockMs(result);
+  if (ms === null) {
+    return null;
+  }
 
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:bg-slate-950/80">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div className={`min-w-0 ${direction === "rtl" ? "text-right" : "text-left"}`}>
-          <p className="text-xs uppercase tracking-[0.18em] text-cyan-300 sm:tracking-[0.25em]">
-            {t.liveScanTimeline}
-          </p>
-          <h3 className="bidi-safe mt-2 break-words text-xl font-semibold text-white">
-            {t.deterministicPipeline}
-          </h3>
-        </div>
-        <p className="text-sm text-slate-300 sm:text-slate-400">
-          {result.meta.responseTime}ms {t.runtime}
-        </p>
-      </div>
-
-      <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
-        {stages.map((stage, index) => (
-          <div
-            className="group flex min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start transition hover:border-cyan-300/30 hover:bg-cyan-300/5 sm:bg-white/[0.04]"
-            key={stage}
-          >
-            <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/10 text-sm font-bold text-emerald-200 shadow-lg shadow-emerald-500/10"
-              style={{ transitionDelay: `${index * 90}ms` }}
-            >
-              {stage === t.stages.aiProgress ? "..." : "✓"}
-            </span>
-            <span className="bidi-safe min-w-0 overflow-hidden break-words text-sm leading-6 text-slate-200">
-              {stage}
-            </span>
-          </div>
-        ))}
-      </div>
+    <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 px-4 py-3 shadow-lg shadow-cyan-500/5 sm:px-5 sm:py-4">
+      <p className="bidi-safe text-start text-sm leading-7 text-slate-200" dir="ltr">
+        <span aria-hidden className="me-2 inline-block">
+          ⚡
+        </span>
+        {t.scanCompletedIn}{" "}
+        <span className="font-semibold tabular-nums text-cyan-100">{ms}</span>
+        ms
+      </p>
     </div>
   );
 }
@@ -533,7 +768,10 @@ function ThreatBanner({
             >
               {getThreatDetected(result.threatLevel, t)}
             </span>
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 min-[390px]:px-4">
+            <span
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300 min-[390px]:px-4 tabular-nums"
+              dir="ltr"
+            >
               {t.grade} {result.grade}
             </span>
           </div>
@@ -544,17 +782,35 @@ function ThreatBanner({
           <p className="bidi-safe mt-4 max-w-4xl overflow-hidden break-words text-start text-base leading-8 text-slate-100 md:text-xl">
             {getExecutiveLine(result, explanation, language, t)}
           </p>
-          <p className="mt-3 max-w-full break-all text-left text-sm leading-6 text-slate-300 sm:text-slate-400" dir="ltr">
+          <p className="mt-3 max-w-full break-all text-start text-sm leading-6 text-slate-300 sm:text-slate-400" dir="ltr">
             {result.meta.finalUrl}
           </p>
         </div>
 
         <div className="grid min-w-0 gap-3 md:grid-cols-3 xl:grid-cols-1">
-          <MetricCard label={t.confidence} value={`${result.confidence}%`}>
-            <div className="mt-3 h-2 rounded-full bg-white/10">
+          <MetricCard
+            label={t.securityVisibility}
+            value={getSecurityVisibilityCardValue(result.observableCoverage.overall, t)}
+            valueCompact
+            valueClassName={`text-2xl leading-none sm:text-3xl ${
+              result.observableCoverage.overall === "full"
+                ? "text-emerald-200"
+                : result.observableCoverage.overall === "partial"
+                  ? "text-amber-200"
+                  : "text-red-200"
+            }`}
+          >
+            <div className="relative mt-3 h-2 w-full rounded-full bg-white/10">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
-                style={{ width: `${result.confidence}%` }}
+                className="absolute inset-y-0 start-0 rounded-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
+                style={{
+                  width:
+                    result.observableCoverage.overall === "full"
+                      ? "100%"
+                      : result.observableCoverage.overall === "partial"
+                        ? "60%"
+                        : "30%",
+                }}
               />
             </div>
           </MetricCard>
@@ -562,11 +818,12 @@ function ThreatBanner({
             className={gradeColor(result.grade)}
             label={t.score}
             value={String(result.score)}
+            valueDir="ltr"
           />
           <MetricCard
             label={t.scanTimestamp}
-            value={new Date(result.meta.scanTimestamp).toLocaleString(language)}
-            valueClassName="text-sm leading-6"
+            value=""
+            splitDisplay={formatScanTimestamp(result.meta.scanTimestamp, language)}
           />
         </div>
       </div>
@@ -579,12 +836,21 @@ function MetricCard({
   value,
   className = "",
   valueClassName = "text-4xl",
+  valueDir,
+  valueCompact = false,
+  splitDisplay,
   children,
 }: {
   label: string;
   value: string;
   className?: string;
   valueClassName?: string;
+  /** Force LTR for numeric scores / percentages */
+  valueDir?: "ltr";
+  /** Smaller, single-line value (Security Visibility card) */
+  valueCompact?: boolean;
+  /** Two-line timestamp-style display (date + time, no seconds) */
+  splitDisplay?: { date: string; time: string };
   children?: React.ReactNode;
 }) {
   return (
@@ -592,9 +858,28 @@ function MetricCard({
       <p className="bidi-safe min-h-5 text-center text-xs uppercase leading-5 tracking-[0.14em] text-slate-300 sm:text-slate-400">
         {label}
       </p>
-      <p className={`bidi-safe mt-2 min-w-0 break-words text-center font-black ${valueClassName} ${className}`}>
-        {value}
-      </p>
+      {splitDisplay ? (
+        <div
+          className="bidi-safe mt-2 flex min-w-0 flex-col items-center gap-1 text-center"
+          dir={valueDir ?? "ltr"}
+        >
+          <p className="text-sm leading-tight text-slate-300 tabular-nums">{splitDisplay.date}</p>
+          <p className="text-lg font-semibold leading-tight text-slate-100 tabular-nums">
+            {splitDisplay.time}
+          </p>
+        </div>
+      ) : (
+        <p
+          className={`bidi-safe mt-2 min-w-0 text-center tabular-nums ${
+            valueCompact
+              ? "whitespace-nowrap font-bold leading-none"
+              : "break-words font-black"
+          } ${valueClassName} ${className}`}
+          dir={valueDir}
+        >
+          {value}
+        </p>
+      )}
       {children ? <div className="mt-auto w-full pt-3">{children}</div> : null}
     </div>
   );
@@ -609,37 +894,36 @@ function AIExplanationCard({
   loading: boolean;
   result: ScanResult;
 }) {
-  const { language, t, direction } = useLanguage();
+  const { language, t } = useLanguage();
   const trust = infrastructureTrust(result, t);
   const theme = threatTheme(result.threatLevel);
   const selectedExplanation = explanation?.[language];
-  const sections = selectedExplanation
-    ? [
-        {
-          title: t.executiveRiskOverview,
-          content: selectedExplanation.executiveRiskOverview,
-        },
-        {
-          title: t.attackSurfaceAnalysis,
-          content: selectedExplanation.attackSurfaceAnalysis,
-        },
-        {
-          title: t.infrastructureTrustAssessment,
-          content: selectedExplanation.infrastructureTrustAssessment,
-        },
-      ]
-    : [];
+
+  const topSurface = useMemo(() => topFindings(result.findings, 3), [result.findings]);
+  const topActions = useMemo(() => topFindings(result.findings, 3), [result.findings]);
+
+  const overviewText = useMemo(() => {
+    if (selectedExplanation?.executiveRiskOverview) {
+      return firstOverviewSentence(selectedExplanation.executiveRiskOverview);
+    }
+    return getExecutiveLine(result, explanation, language, t);
+  }, [selectedExplanation, result, explanation, language, t]);
+
+  const exposureElevated = result.infrastructure.serverExposureScore > 48;
+  const cdnLabel = result.infrastructure.cdn?.trim()
+    ? result.infrastructure.cdn
+    : t.cdnNoneShort;
+
+  const assessmentCardClass =
+    "flex min-h-0 min-w-0 flex-col rounded-2xl border border-white/10 bg-white/[0.06] p-4 text-start sm:p-5";
 
   return (
     <section
       className={`rounded-[2rem] border ${theme.border} bg-slate-950/90 p-4 text-white shadow-2xl ${theme.glow} min-[390px]:p-5 md:p-7`}
     >
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 text-start">
-          <p className="text-xs uppercase tracking-[0.2em] text-fuchsia-300 sm:tracking-[0.3em]">
-            {t.aiSummary}
-          </p>
-          <h3 className="bidi-safe mt-3 break-words text-xl font-bold tracking-tight min-[390px]:text-2xl md:text-3xl">
+        <div className="min-w-0 flex-1 text-start">
+          <h3 className="bidi-safe break-words text-xl font-bold tracking-tight min-[390px]:text-2xl md:text-3xl">
             {t.executiveBrief}
           </h3>
           <p className="bidi-safe mt-2 max-w-3xl overflow-hidden break-words text-sm leading-7 text-slate-300 sm:text-slate-400">
@@ -647,9 +931,7 @@ function AIExplanationCard({
           </p>
         </div>
 
-        <div
-          className={`flex min-w-0 flex-wrap gap-2 ${direction === "rtl" ? "lg:justify-start" : "lg:justify-end"}`}
-        >
+        <div className="flex min-w-0 shrink-0 flex-wrap items-center justify-end gap-2 rtl:justify-start">
           <span className={`bidi-safe inline-flex min-h-8 max-w-full items-center rounded-full border px-3 py-1.5 text-xs leading-5 ${theme.badge}`}>
             {getThreatLabel(result.threatLevel, t)} {t.risk}
           </span>
@@ -660,79 +942,157 @@ function AIExplanationCard({
       </div>
 
       {loading ? (
-        <div className="mt-6 grid min-w-0 items-start gap-3 lg:grid-cols-3">
-          {t.aiStages.map((stage, index) => (
+        <div className="assessment-grid mt-6 min-w-0">
+          {[0, 1, 2, 3].map((i) => (
             <div
-              className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 sm:bg-white/[0.04]"
-              key={stage}
-            >
-              <div className="flex items-center gap-3 text-start">
-                <span
-                  className={`h-2.5 w-2.5 animate-pulse rounded-full ${theme.pulse}`}
-                  style={{ animationDelay: `${index * 160}ms` }}
-                />
-                <span className="bidi-safe min-w-0 text-sm leading-6 text-slate-200">
-                  {stage}
-                </span>
-              </div>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                <div
-                  className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-cyan-300 to-fuchsia-300"
-                  style={{ animationDelay: `${index * 120}ms` }}
-                />
-              </div>
-            </div>
+              className="min-h-[148px] animate-pulse rounded-2xl border border-white/10 bg-white/[0.05]"
+              key={String(i)}
+            />
           ))}
         </div>
-      ) : null}
-
-      {selectedExplanation ? (
-        <div className="mt-6 space-y-4">
-          {sections.map((section, index) => (
-            <details
-              className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5 sm:bg-white/[0.04]"
-              key={section.title}
-              open={index === 0}
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-start text-base font-semibold text-white min-[390px]:gap-4 sm:text-lg">
-                <span className="bidi-safe min-w-0">{section.title}</span>
-                <span className="shrink-0 text-sm text-cyan-200 transition group-open:rotate-45">
-                  +
-                </span>
-              </summary>
-              <p
-                className="bidi-safe mt-4 overflow-hidden break-words text-start text-sm leading-8 text-slate-300"
-                dir={direction}
+      ) : (
+        <div className="assessment-grid mt-6 min-w-0">
+          <div className={assessmentCardClass}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+              🔍 {t.overviewCard}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span
+                className={`bidi-safe inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase leading-none tracking-[0.12em] ${theme.badge}`}
               >
-                {section.content}
-              </p>
-            </details>
-          ))}
-
-          <details className="group min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 transition open:border-cyan-300/30 open:bg-cyan-300/[0.06] min-[390px]:p-5 sm:bg-white/[0.04]" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-start text-base font-semibold text-white min-[390px]:gap-4 sm:text-lg">
-              <span className="bidi-safe min-w-0">{t.recommendedSecurityActions}</span>
-              <span className="shrink-0 text-sm text-cyan-200 transition group-open:rotate-45">
-                +
+                {getThreatLabel(result.threatLevel, t)}
               </span>
-            </summary>
-            <ul className="mt-4 space-y-3 text-start text-sm leading-7 text-slate-300">
-              {selectedExplanation.recommendedSecurityActions.map((recommendation) => (
-                <li className="bidi-safe overflow-hidden break-words rounded-xl bg-white/[0.07] p-4 sm:bg-white/[0.04]" key={recommendation}>
-                  {recommendation}
-                </li>
+            </div>
+            <p className="mt-3 text-xs leading-6 text-slate-300" dir="ltr">
+              {t.score}: {result.score}/95 · {t.grade} {result.grade}
+            </p>
+            <p className="mt-1 text-xs leading-6 text-slate-400">
+              {t.securityVisibility}: {getSecurityVisibilityCardValue(result.observableCoverage.overall, t)}
+            </p>
+            <p
+              className="bidi-safe mt-3 text-sm leading-7 text-slate-100"
+              dir={language === "ar" ? "rtl" : "ltr"}
+            >
+              {overviewText}
+            </p>
+          </div>
+
+          <div className={assessmentCardClass}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+              ⚔️ {t.attackSurfaceCard}
+            </p>
+            {topSurface.length > 0 ? (
+              <ul className="mt-3 space-y-2">
+                {topSurface.map((f, idx) => (
+                  <li
+                    className="bidi-safe flex gap-2 text-start text-xs leading-6 text-slate-200 sm:text-sm"
+                    dir={language === "ar" ? "rtl" : "ltr"}
+                    key={`surface-${idx}-${f.severity}`}
+                  >
+                    <span className="shrink-0" aria-hidden>
+                      {findingSeverityDot(f.severity)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="font-bold uppercase text-slate-400">{f.severity}</span> —{" "}
+                      {f.message[language]}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p
+                className="bidi-safe mt-3 text-sm leading-7 text-emerald-200/90"
+                dir={language === "ar" ? "rtl" : "ltr"}
+              >
+                ✅ {t.noAttackSurfaceDetected}
+              </p>
+            )}
+          </div>
+
+          <div className={assessmentCardClass}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+              🏗️ {t.infrastructureTrustCard}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {result.technologies.slice(0, 8).map((tech) => (
+                <span
+                  className="inline-flex max-w-full items-center break-all rounded-full border border-cyan-400/25 bg-cyan-400/10 px-2.5 py-1 text-[11px] leading-4 text-cyan-100"
+                  dir="ltr"
+                  key={tech}
+                >
+                  {tech}
+                </span>
               ))}
-            </ul>
-          </details>
+            </div>
+            <p className="mt-3 text-xs leading-6 text-slate-300" dir="ltr">
+              {t.tlsSummaryLabel}: {result.ssl.protocol || t.unknown} ·{" "}
+              {result.ssl.valid ? t.yes : t.no}
+            </p>
+            <p className="mt-1 text-xs leading-6 text-slate-400" dir={language === "ar" ? "rtl" : "ltr"}>
+              {t.cdnActiveLabel}: {cdnLabel}
+            </p>
+            <p className="mt-1 text-xs font-semibold leading-6 text-slate-300">
+              {exposureElevated ? t.exposureHighLabel : t.exposureLowLabel}
+            </p>
+          </div>
+
+          <div className={assessmentCardClass}>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-cyan-200/90">
+              ✅ {t.actionsCard}
+            </p>
+            {topActions.length > 0 ? (
+              <div className="mt-3 space-y-3 text-start text-sm leading-6 text-slate-200">
+                {topActions.map((f, idx) => {
+                  const est = f.id ? getFixTimeEstimate(f.id) : undefined;
+                  return (
+                    <div
+                      className="bidi-safe flex flex-col gap-1 border-b border-white/5 pb-3 last:border-b-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                      dir={language === "ar" ? "rtl" : "ltr"}
+                      key={`action-${idx}-${f.severity}`}
+                    >
+                      <div className="min-w-0">
+                        <span className="font-bold text-cyan-200/90">{idx + 1}.</span>{" "}
+                        {f.message[language]}
+                      </div>
+                      {est ? (
+                        <span
+                          className="shrink-0 self-start rounded-full border border-white/10 bg-white/[0.06] px-2 py-0.5 text-[10px] font-bold tabular-nums text-slate-300"
+                          dir="ltr"
+                        >
+                          {est}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p
+                className="bidi-safe mt-3 text-sm leading-7 text-slate-400"
+                dir={language === "ar" ? "rtl" : "ltr"}
+              >
+                {t.noRankedActionsBrief}
+              </p>
+            )}
+          </div>
         </div>
-      ) : null}
+      )}
     </section>
   );
 }
 
 function CriticalFindings({ result }: { result: ScanResult }) {
   const { t } = useLanguage();
-  const findings = getCriticalFindings(result.findings);
+  const findings = result.findings;
+  const urgentCount = findings.filter(
+    (f) => f.severity === "critical" || f.severity === "high",
+  ).length;
+  const weekCount = findings.filter((f) => f.severity === "medium").length;
+  const laterCount = findings.filter(
+    (f) => f.severity === "low" || f.severity === "informational",
+  ).length;
+  const effortKey = getActionPlanEffortBandKey(findings);
+  const effortLabel = effortBandLabel(t, effortKey);
 
   return (
     <section className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-red-500/5 sm:bg-slate-950/80 sm:p-5 md:p-7">
@@ -742,13 +1102,24 @@ function CriticalFindings({ result }: { result: ScanResult }) {
             {t.criticalFindings}
           </p>
           <h3 className="bidi-safe mt-2 break-words text-xl font-bold text-white min-[390px]:text-2xl">
-            {t.priorityRemediationQueue}
+            {t.securityActionPlan}
           </h3>
         </div>
         <span className="inline-flex min-h-8 items-center self-start rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs leading-none text-slate-300 sm:self-auto">
-          {result.findings.length} {t.totalFindings}
+          {findings.length} {t.totalFindings}
         </span>
       </div>
+
+      {findings.length > 0 ? (
+        <div className="bidi-safe mt-4 flex flex-wrap gap-x-4 gap-y-2 text-start text-xs leading-6 text-slate-200 sm:text-sm">
+          <span>{interpolate(t.actionPlanUrgent, { count: urgentCount })}</span>
+          <span>{interpolate(t.actionPlanThisWeek, { count: weekCount })}</span>
+          <span>{interpolate(t.actionPlanLater, { count: laterCount })}</span>
+          <span className="tabular-nums text-slate-300">
+            {interpolate(t.actionPlanTotalEffort, { band: effortLabel })}
+          </span>
+        </div>
+      ) : null}
 
       <div className="mt-5 grid min-w-0 items-start gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {findings.length > 0 ? (
@@ -757,6 +1128,7 @@ function CriticalFindings({ result }: { result: ScanResult }) {
               finding={finding}
               index={index}
               key={`${finding.id ?? finding.severity}-${index}`}
+              result={result}
             />
           ))
         ) : (
@@ -769,17 +1141,99 @@ function CriticalFindings({ result }: { result: ScanResult }) {
   );
 }
 
+function intelligenceReputationLabel(
+  rep: ScanResult["intelligence"]["reputation"],
+  language: Language,
+): string {
+  if (language === "ar") {
+    if (rep === "trusted") {
+      return "موثوق";
+    }
+    if (rep === "suspicious") {
+      return "مشبوه";
+    }
+    return "محايد";
+  }
+  if (rep === "trusted") {
+    return "Trusted";
+  }
+  if (rep === "suspicious") {
+    return "Suspicious";
+  }
+  return "Neutral";
+}
+
+function DomainSignalBlock({
+  icon,
+  headline,
+  explanation,
+  footnote,
+}: {
+  icon: string;
+  headline: string;
+  explanation: string;
+  footnote?: string | null;
+}) {
+  const { language } = useLanguage();
+  return (
+    <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start sm:bg-white/[0.04] sm:p-5">
+      <p
+        className="bidi-safe text-start text-sm font-semibold leading-7 text-slate-100"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        <span aria-hidden className="me-2">
+          {icon}
+        </span>
+        {headline}
+      </p>
+      <p
+        className="bidi-safe mt-2 text-start text-xs leading-6 text-slate-300 sm:text-sm sm:leading-7 sm:text-slate-400"
+        dir={language === "ar" ? "rtl" : "ltr"}
+      >
+        {explanation}
+      </p>
+      {footnote ? (
+        <p
+          className="bidi-safe mt-2 text-start text-[11px] leading-5 text-slate-500 sm:text-xs"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          {footnote}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 function DomainIntelligence({ result }: { result: ScanResult }) {
   const { language, t } = useLanguage();
   const reputationBadge = getReputationBadgeText(result, language, t);
-  const domainRows = [
-    [t.domain, result.intelligence.domain],
-    [t.reputation, result.intelligence.reputation],
-    [t.suspiciousTld, localizedBoolean(result.intelligence.suspiciousTld, t)],
-    [t.punycodeIdn, localizedBoolean(result.intelligence.punycode, t)],
-    [t.typosquatting, result.intelligence.typosquatting ? t.likely : t.no],
-    [t.urlEntropy, String(result.intelligence.entropy)],
-  ];
+  const entropyBand = getEntropyBand(result.intelligence.entropy);
+  const entropyIcon = entropyStatusIcon(entropyBand);
+  const repIcon = reputationStatusIcon(result.intelligence.reputation);
+  const typoIcon = result.intelligence.typosquatting ? "⚠️" : "✅";
+  const tldIcon = result.intelligence.suspiciousTld ? "⚠️" : "✅";
+  const punyIcon = result.intelligence.punycode ? "⚠️" : "✅";
+
+  const reputationHeadline = `${t.reputation}: ${intelligenceReputationLabel(result.intelligence.reputation, language)}`;
+  const vendorLine = reputationBadge;
+  const showVendorUnderPuny =
+    Boolean(vendorLine) &&
+    !result.intelligence.punycode &&
+    result.reputation?.verdict === "clean";
+  const reputationFootnote = vendorLine && !showVendorUnderPuny ? vendorLine : null;
+  const punyFootnote = showVendorUnderPuny ? vendorLine : null;
+
+  const typosquatHeadline = `${t.typosquatting}: ${
+    result.intelligence.typosquatting ? t.likely : t.unlikely
+  }`;
+
+  const entropyHeadline = `${t.urlEntropy}: ${result.intelligence.entropy.toFixed(2)} — ${entropyBandWord(entropyBand, language)}`;
+
+  const punyHeadline = `${t.punycodeIdn}: ${
+    result.intelligence.punycode ? t.yes : t.noneDetected
+  }`;
+
+  const tldHeadline = `${t.suspiciousTld}: ${localizedBoolean(result.intelligence.suspiciousTld, t)}`;
 
   return (
     <section className="grid min-w-0 items-start gap-5 xl:grid-cols-[1fr_0.9fr]">
@@ -790,34 +1244,45 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         <h3 className="bidi-safe mt-2 break-words text-start text-xl font-bold text-white min-[390px]:text-2xl">
           {t.reputationSignals}
         </h3>
-        <dl className="mt-5 grid min-w-0 items-start gap-3 md:grid-cols-2">
-          {domainRows.map(([label, value]) => (
-            <div className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start sm:bg-white/[0.04] sm:p-5" key={label}>
-              <dt className="bidi-safe text-start text-xs uppercase leading-5 tracking-[0.16em] text-slate-400 sm:text-slate-500">
-                {label}
-              </dt>
-              <dd className="bidi-safe mt-3 overflow-hidden break-words text-start text-sm font-semibold leading-6 text-slate-100">
-                {value}
-              </dd>
-            </div>
-          ))}
-        </dl>
+        <p
+          className="bidi-safe mt-3 text-start text-xs leading-6 text-slate-400 sm:text-sm"
+          dir={language === "ar" ? "rtl" : "ltr"}
+        >
+          {t.domain}: <span className="font-semibold text-slate-200" dir="ltr">{result.intelligence.domain}</span>
+        </p>
+        <div className="mt-5 space-y-3">
+          <DomainSignalBlock
+            explanation={getReputationExplanation(result, language)}
+            footnote={reputationFootnote}
+            headline={reputationHeadline}
+            icon={repIcon}
+          />
+          <DomainSignalBlock
+            explanation={getTyposquattingExplanation(result, language)}
+            headline={typosquatHeadline}
+            icon={typoIcon}
+          />
+          <DomainSignalBlock
+            explanation={getEntropyExplanation(result, language)}
+            headline={entropyHeadline}
+            icon={entropyIcon}
+          />
+          <DomainSignalBlock
+            explanation={getPunycodeExplanation(result, language)}
+            footnote={punyFootnote}
+            headline={punyHeadline}
+            icon={punyIcon}
+          />
+          <DomainSignalBlock
+            explanation={getSuspiciousTldExplanation(result, language)}
+            headline={tldHeadline}
+            icon={tldIcon}
+          />
+        </div>
         {result.intelligence.phishingKeywords.length > 0 ? (
           <p className="bidi-safe mt-4 overflow-hidden break-words rounded-2xl border border-amber-300/20 bg-amber-300/10 p-4 text-start text-sm leading-7 text-amber-100 min-[390px]:p-5">
             {t.phishingKeywords}: {result.intelligence.phishingKeywords.join(", ")}
           </p>
-        ) : null}
-        {reputationBadge ? (
-          <div className="mt-4 rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.08] p-4 text-start min-[390px]:p-5 sm:bg-cyan-300/10">
-            <span className="bidi-safe inline-flex max-w-full overflow-hidden break-words rounded-full border border-cyan-300/30 bg-cyan-300/10 px-3 py-1.5 text-xs font-bold leading-5 text-cyan-100">
-              {reputationBadge}
-            </span>
-            <p className="bidi-safe mt-3 text-xs leading-6 text-slate-300 sm:text-slate-400">
-              {language === "ar"
-                ? "نتائج السمعة هي إشارات استخباراتية وليست حكمًا نهائيًا."
-                : "Reputation results are intelligence signals, not deterministic proof."}
-            </p>
-          </div>
         ) : null}
       </div>
 
@@ -829,22 +1294,43 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
           {t.technologyFingerprint}
         </h3>
         {result.technologies.length > 0 ? (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {result.technologies.map((technology) => (
-              <span
-                className="inline-flex min-h-9 max-w-full items-center break-all rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-sm leading-5 text-cyan-100 min-[390px]:px-4"
-                key={technology}
-                dir="ltr"
-              >
-                {technology}
-              </span>
-            ))}
-          </div>
+          <ul className="mt-5 space-y-3">
+            {result.technologies.map((technology, idx) => {
+              const { risk, line } = getTechnologyContextLine(technology, result, language);
+              const riskBadgeClass =
+                risk === "safe"
+                  ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"
+                  : risk === "warning"
+                    ? "border-amber-300/30 bg-amber-300/10 text-amber-100"
+                    : "border-cyan-400/25 bg-cyan-400/10 text-cyan-100";
+              return (
+                <li
+                  className="min-w-0 rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start sm:bg-white/[0.04] sm:p-5"
+                  key={`${technology}-${idx}`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2" dir="ltr">
+                    <span className="min-w-0 break-all text-sm font-semibold text-slate-100">{technology}</span>
+                    <span
+                      className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${riskBadgeClass}`}
+                    >
+                      {techRiskLabel(risk, language)}
+                    </span>
+                  </div>
+                  <p
+                    className="bidi-safe mt-2 text-start text-xs leading-6 text-slate-300 sm:text-sm sm:text-slate-400"
+                    dir={language === "ar" ? "rtl" : "ltr"}
+                  >
+                    {line}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
         ) : (
           <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-300 sm:text-slate-400">{t.noFingerprint}</p>
         )}
         <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
-          {t.server}: {result.meta.server || t.notDisclosed}
+          {t.server} {result.meta.server || t.notDisclosed}
         </p>
       </div>
     </section>
@@ -896,7 +1382,7 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
                   key={`${step.statusCode}-${step.url}`}
                 >
                   <span className="font-semibold text-cyan-200" dir="ltr">{step.statusCode}</span>{" "}
-                  <span className="inline-block max-w-full break-all text-left" dir="ltr">{step.url}</span>
+                  <span className="inline-block max-w-full break-all text-start" dir="ltr">{step.url}</span>
                 </li>
               ))}
             </ol>
@@ -912,7 +1398,7 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
               className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.07] px-4 py-3 text-sm sm:bg-white/[0.04]"
               key={header}
             >
-              <span className="min-w-0 break-words text-left leading-6 text-slate-300" dir="ltr">
+              <span className="min-w-0 break-words text-start leading-6 text-slate-300" dir="ltr">
                 {formatHeaderName(header)}
               </span>
               <span
@@ -937,38 +1423,10 @@ export default function ReportCard({
   loading,
   explanation,
   aiLoading,
+  scanId,
+  scanToken,
 }: ReportCardProps) {
   const { language, t } = useLanguage();
-  const [exporting, setExporting] = useState(false);
-  const [exported, setExported] = useState(false);
-  const [exportError, setExportError] = useState(false);
-
-  async function handleExport() {
-    if (!result || exporting) {
-      return;
-    }
-
-    setExporting(true);
-    setExported(false);
-    setExportError(false);
-
-    try {
-      await generateCyberGuardianPdf({
-        result,
-        explanation,
-        language,
-        t,
-      });
-      setExported(true);
-      window.setTimeout(() => setExported(false), 3000);
-    } catch {
-      setExportError(true);
-      window.setTimeout(() => setExportError(false), 4000);
-    } finally {
-      setExporting(false);
-    }
-  }
-
   if (loading) {
     return (
       <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-5 text-center shadow-2xl shadow-cyan-500/10 transition min-[390px]:p-6 sm:p-10">
@@ -1001,30 +1459,16 @@ export default function ReportCard({
       <h2 className="bidi-safe text-center text-xl font-semibold text-slate-950 dark:text-white min-[390px]:text-2xl">
         {t.reportEmptyTitle}
       </h2>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-        {exported ? (
-          <div className="bidi-safe max-w-full overflow-hidden break-words rounded-2xl border border-emerald-400/30 bg-emerald-400/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-emerald-200 shadow-lg shadow-emerald-500/10">
-            {t.reportExportedSuccessfully}
-          </div>
-        ) : null}
-        {exportError ? (
-          <div className="bidi-safe max-w-full overflow-hidden break-words rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-start text-sm font-semibold leading-6 text-amber-100 shadow-lg shadow-amber-500/10">
-            {t.exportFailed}
-          </div>
-        ) : null}
-        <button
-          className="inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-2xl border border-cyan-300/30 bg-cyan-400 px-6 font-bold text-slate-950 shadow-2xl shadow-cyan-500/20 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-          disabled={exporting}
-          onClick={handleExport}
-          type="button"
-        >
-          {exporting ? (
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/30 border-t-slate-950" />
-          ) : null}
-          {exporting ? t.exportingReport : t.exportReport}
-        </button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end rtl:sm:justify-start">
+        <DownloadReportButton
+          locale={language}
+          result={result}
+          scanId={scanId}
+          scanToken={scanToken}
+        />
       </div>
       <ThreatBanner result={result} explanation={explanation} />
+      <ScoreBreakdown result={result} />
       <AIExplanationCard
         explanation={explanation}
         loading={aiLoading}
@@ -1032,7 +1476,7 @@ export default function ReportCard({
       />
       <CriticalFindings result={result} />
       <DomainIntelligence result={result} />
-      <ScanTimeline result={result} aiComplete={Boolean(explanation)} />
+      <ScanTimingLine result={result} />
       <TechnicalDetails result={result} />
     </section>
   );

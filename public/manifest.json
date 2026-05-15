@@ -1,0 +1,11 @@
+{
+  "name": "CyberGurdian AI",
+  "short_name": "CyberGurdian",
+  "description": "CyberGurdian AI — cybersecurity intelligence platform for website security scanning and executive-grade reporting.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#22d3ee",
+  "lang": "en",
+  "dir": "ltr"
+}

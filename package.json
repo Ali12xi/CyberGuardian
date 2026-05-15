@@ -10,13 +10,19 @@
     "export:lib-pdf": "node scripts/export-lib-sources-pdf.mjs"
   },
   "dependencies": {
+    "@react-pdf/renderer": "^4.3.0",
     "next": "^14.2.35",
+    "qrcode": "^1.5.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@fontsource/inter": "^5.2.5",
+    "@fontsource/noto-sans-arabic": "^5.2.5",
     "@types/node": "^20",
     "@types/pdfkit": "^0.17.6",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",

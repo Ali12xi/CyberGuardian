@@ -1,4 +1,6 @@
+import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { generateScanToken } from "@/lib/scanToken";
 import { scanUrl } from "@/lib/scanner";
 import { validateUrl } from "@/lib/validator";
 import { translations } from "@/lib/i18n";
@@ -66,8 +68,27 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await scanUrl(validation.url);
+    const scanId = randomUUID();
 
-    return NextResponse.json<AnalyzeApiResponse>({ ok: true, result });
+    let scanToken: string;
+
+    try {
+      scanToken = generateScanToken(scanId, result);
+    } catch (error) {
+      console.error(
+        "[analyze] Scan token generation failed",
+        error instanceof Error ? error.message : error,
+      );
+      return errorResponse(
+        {
+          en: translations.en.scanTokenUnavailable,
+          ar: translations.ar.scanTokenUnavailable,
+        },
+        503,
+      );
+    }
+
+    return NextResponse.json<AnalyzeApiResponse>({ ok: true, result, scanId, scanToken });
   } catch {
     return errorResponse(GENERIC_ERROR, 500);
   }

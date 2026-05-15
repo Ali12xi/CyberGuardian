@@ -5,6 +5,9 @@ export const metadata: Metadata = {
   title: "Contact CyberGurdian AI",
   description:
     "Contact CyberGurdian AI for cybersecurity research, collaboration, development feedback, and AI-powered website security intelligence discussions.",
+  alternates: {
+    canonical: "/contact",
+  },
   openGraph: {
     title: "Contact CyberGurdian AI",
     description:
