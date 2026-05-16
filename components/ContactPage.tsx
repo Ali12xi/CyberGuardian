@@ -1,49 +1,52 @@
 "use client";
 
+import Link from "next/link";
 import PublicShell from "@/components/PublicShell";
 import { useLanguage } from "@/components/LanguageProvider";
 
 const CONTACT = {
-  email: "ali7abdrahman@gmail.com",
+  email: "cybergurdianai@gmail.com",
   github: "https://github.com/Ali12xi",
 };
 
 const CONTENT = {
   en: {
     eyebrow: "Contact",
-    title: "Connect with CyberGurdian AI.",
+    title: "Security Collaboration",
     subtitle:
-      "For collaboration, security research, product feedback, or technical discussion, reach out through the channels below.",
+      "CyberGurdian operates at the intersection of intelligence and infrastructure. We engage with security researchers, engineers, and institutions building toward a more defensible web.",
     intro:
-      "CyberGurdian AI welcomes thoughtful conversations with developers, researchers, organizations, and builders who care about practical cybersecurity intelligence.",
-    collaborationTitle: "Collaboration",
+      "Review the platform's public codebase, open issues, and contribution guidelines.",
+    collaborationTitle: "Security Contact",
     collaboration:
-      "Open to product feedback, responsible security research, integration ideas, and partnerships that make web security easier to understand.",
-    researchTitle: "Security Research",
+      "For platform inquiries, assessment methodology questions, or enterprise engagement.",
+    researchTitle: "Research Areas",
     research:
-      "If you are a researcher reviewing CyberGurdian AI or have suggestions for improving analysis quality, deterministic scoring, or bilingual reporting, your input is welcome.",
-    emailLabel: "Email",
-    githubLabel: "GitHub",
-    emailAction: "Send email",
-    githubAction: "View profile",
+      "External attack surface analysis · TLS and certificate intelligence · Behavioral signal correlation · Trust scoring methodology · Web infrastructure fingerprinting",
+    emailLabel: "Security Contact",
+    githubLabel: "Engineering & Research",
+    emailAction: "Send a Message",
+    githubAction: "View Repository",
+    privacyLink: "Privacy & Usage",
   },
   ar: {
     eyebrow: "تواصل",
-    title: "تواصل مع CyberGurdian AI.",
+    title: "التعاون الأمني",
     subtitle:
-      "للتعاون أو أبحاث الأمن أو ملاحظات المنتج أو النقاش التقني، يمكنك استخدام قنوات التواصل أدناه.",
+      "يعمل CyberGurdian عند تقاطع الاستخبارات والبنية التحتية. نتعاون مع باحثي الأمن والمهندسين والمؤسسات الساعية إلى بناء ويب أكثر قابلية للدفاع.",
     intro:
-      "يرحب CyberGurdian AI بالنقاشات الجادة مع المطورين والباحثين والمؤسسات والمهتمين ببناء استخبارات أمنية عملية ومفهومة.",
-    collaborationTitle: "التعاون",
+      "استعرض قاعدة الكود العامة للمنصة، والمشكلات المفتوحة، وإرشادات المساهمة.",
+    collaborationTitle: "التواصل الأمني",
     collaboration:
-      "متاح لملاحظات المنتج، وأبحاث الأمن المسؤولة، وأفكار التكامل، والشراكات التي تجعل أمن الويب أسهل فهمًا.",
-    researchTitle: "أبحاث الأمن",
+      "للاستفسارات المتعلقة بالمنصة، أو منهجية التقييم، أو التعاون المؤسسي.",
+    researchTitle: "مجالات البحث",
     research:
-      "إذا كنت باحثًا تراجع CyberGurdian AI أو لديك اقتراحات لتحسين جودة التحليل أو التقييم الحتمي أو التقارير ثنائية اللغة، فمساهمتك مرحب بها.",
-    emailLabel: "البريد الإلكتروني",
-    githubLabel: "GitHub",
-    emailAction: "إرسال بريد",
-    githubAction: "عرض الملف",
+      "تحليل سطح الهجوم الخارجي · استخبارات TLS والشهادات · ربط الإشارات السلوكية · منهجية تسجيل الثقة · بصمات البنية التحتية للويب",
+    emailLabel: "التواصل الأمني",
+    githubLabel: "الهندسة والبحث",
+    emailAction: "إرسال رسالة",
+    githubAction: "عرض المستودع",
+    privacyLink: "الخصوصية والاستخدام",
   },
 } as const;
 
@@ -136,6 +139,15 @@ export default function ContactPage() {
           />
         </div>
       </section>
+
+      <p className="mt-8 text-center">
+        <Link
+          className="text-sm text-slate-500 transition hover:text-slate-300 dark:text-slate-400 dark:hover:text-slate-300"
+          href={`/${language}/privacy`}
+        >
+          {content.privacyLink}
+        </Link>
+      </p>
     </PublicShell>
   );
 }
