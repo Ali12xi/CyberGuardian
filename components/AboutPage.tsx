@@ -2,13 +2,14 @@
 
 import PublicShell from "@/components/PublicShell";
 import { useLanguage } from "@/components/LanguageProvider";
+import { VERSION } from "@/lib/brand";
 
 const CONTENT = {
   en: {
     eyebrow: "About CyberGurdian AI",
     title: "Cybersecurity intelligence that people can actually understand.",
     subtitle:
-      "CyberGurdian AI V1.5.5 turns externally observable website security signals into deterministic, explainable, and human-readable intelligence for developers, researchers, founders, and decision makers.",
+      `CyberGurdian AI ${VERSION} turns externally observable website security signals into deterministic, explainable, and human-readable intelligence for developers, researchers, founders, and decision makers.`,
     missionTitle: "Mission",
     mission:
       "The mission is simple: make web security analysis clearer, calmer, and more useful. CyberGurdian AI exists to help people understand risk without drowning them in raw scanner output or unverifiable claims.",
@@ -45,7 +46,7 @@ const CONTENT = {
     eyebrow: "عن CyberGurdian AI",
     title: "استخبارات أمنية يمكن فهمها فعليًا.",
     subtitle:
-      "يحوّل CyberGurdian AI V1.5.5 الإشارات الأمنية المرئية خارجيًا للمواقع إلى استخبارات حتمية وقابلة للتفسير ومفهومة للمطورين والباحثين والمؤسسين وصنّاع القرار.",
+      `يحوّل CyberGurdian AI ${VERSION} الإشارات الأمنية المرئية خارجيًا للمواقع إلى استخبارات حتمية وقابلة للتفسير ومفهومة للمطورين والباحثين والمؤسسين وصنّاع القرار.`,
     missionTitle: "المهمة",
     mission:
       "المهمة بسيطة: جعل تحليل أمن الويب أوضح وأكثر هدوءًا وفائدة. صُمم CyberGurdian AI لمساعدة الناس على فهم المخاطر دون إغراقهم بمخرجات فنية خام أو ادعاءات غير قابلة للتحقق.",

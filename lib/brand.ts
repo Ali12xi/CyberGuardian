@@ -1,5 +1,5 @@
 /**
- * Canonical product branding — single source of truth (V1.5.5).
+ * Canonical product branding — single source of truth (V1.6).
  * Safe to import from client or server (no server-only).
  */
 
@@ -7,7 +7,7 @@ export const BRAND = "CyberGurdian AI";
 
 export const ENGINE_NAME = "CyberGurdian Intelligence Engine";
 
-export const VERSION = "V1.5.5";
+export const VERSION = "V1.6";
 
 export const CANONICAL_SITE_URL = "https://www.cybergurdianai.com/";
 

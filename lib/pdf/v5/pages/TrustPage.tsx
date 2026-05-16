@@ -1,4 +1,5 @@
 import { Image, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { VERSION } from "@/lib/brand";
 import { bf, FixedPageFooterV5, LtrText, LocaleText, footerReservePt, type LocaleV5 } from "@/lib/pdf/v5/components";
 import { A4_H, A4_W, colors, CONTENT_W, MARGIN, typo } from "@/lib/pdf/v5/constants";
 import type { PdfReportDataV5 } from "@/lib/pdf/v5/mapV5";
@@ -101,7 +102,7 @@ export function TrustPageV5({ data }: { data: PdfReportDataV5 }) {
             "ملاحظة خارجية فقط. ليس اختبار اختراق ولا استشارة قانونية.",
           )}
         </Text>
-        <Text style={[s.copy, bf(locale)]}>CyberGurdian AI © 2026 · V1.6</Text>
+        <Text style={[s.copy, bf(locale)]}>{`CyberGurdian AI © 2026 · ${VERSION}`}</Text>
       </View>
       <FixedPageFooterV5 locale={locale} />
     </Page>

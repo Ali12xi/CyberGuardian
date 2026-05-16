@@ -1,4 +1,5 @@
 import QRCode from "qrcode";
+import { VERSION } from "@/lib/brand";
 import { calculateCategoryScores } from "@/lib/categoryScores";
 import { getEffectiveSnippetsForFinding, getFixTimeEstimate } from "@/lib/fixSnippets";
 import { getLocalizedRemediation, type RemediationCategory } from "@/lib/remediation";
@@ -1030,7 +1031,7 @@ export async function buildPdfReportDataV5(
       timestamp: legacy.timestampUtc,
       duration: result.meta.responseTime,
       confidence: 95,
-      version: "V1.6",
+      version: VERSION,
       verifyUrl: legacy.verifyUrl,
       tokenDisplay: legacy.tokenDisplay,
       verifyDisplayLine1: legacy.verifyDisplayLine1,
