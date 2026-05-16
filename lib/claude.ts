@@ -5,7 +5,7 @@ import { formatSecurityVisibilityOverall, translations } from "@/lib/i18n";
 import type { AIExplanation, AIExplanationContent, ScanResult } from "@/lib/types";
 
 const CLAUDE_API_URL = "https://api.anthropic.com/v1/messages";
-const CLAUDE_MODEL = "claude-3-5-haiku-latest";
+const CLAUDE_MODEL = "claude-haiku-4-5";
 const AI_TIMEOUT_MS = 15_000;
 const MAX_RECOMMENDATIONS = 5;
 
@@ -63,7 +63,7 @@ function sanitizeContent(value: unknown, fallback: AIExplanationContent) {
   const content = record as Record<string, unknown>;
   const actions = sanitizeRecommendations(content.recommendedSecurityActions);
 
-  return {
+  const sanitized = {
     executiveRiskOverview: sanitizeText(
       content.executiveRiskOverview,
       fallback.executiveRiskOverview,
@@ -79,6 +79,12 @@ function sanitizeContent(value: unknown, fallback: AIExplanationContent) {
     recommendedSecurityActions:
       actions.length > 0 ? actions : fallback.recommendedSecurityActions,
   };
+  console.log("[CLAUDE_DEBUG] Sanitized field lengths:", {
+    overview: sanitized.executiveRiskOverview?.length ?? 0,
+    attack: sanitized.attackSurfaceAnalysis?.length ?? 0,
+    infra: sanitized.infrastructureTrustAssessment?.length ?? 0,
+  });
+  return sanitized;
 }
 
 function sanitizeExplanation(value: unknown, fallback: AIExplanation): AIExplanation {
@@ -270,6 +276,16 @@ Tone requirements:
 - Explain what the issue means, why it matters, the risk level, and suggested fixes.
 - Keep recommendations practical and specific to the observed evidence.
 
+Field structure requirements:
+- "executiveRiskOverview" MUST contain exactly THREE sentences:
+  1. Risk level + deterministic score (e.g. "The target is assessed as \${threatLevel} risk with a deterministic score of \${score}/95.").
+  2. External security visibility statement clarifying what was observable (use the term "security visibility" exactly).
+  3. Synthesis sentence correlating TLS posture, browser hardening headers, domain intelligence, redirect behavior, and externally visible infrastructure metadata.
+- "attackSurfaceAnalysis" MUST be 2–3 sentences correlating missing controls with attacker-side capabilities, not a list.
+- "infrastructureTrustAssessment" MUST be 2–3 sentences describing trust posture, observed technologies, TLS material, and any reputation indicators.
+- Both English and Arabic outputs MUST follow the same structure and depth. The Arabic version is not a literal translation — it should read naturally as Arabic cybersecurity prose at the same analytical depth as the English version.
+- Never collapse "executiveRiskOverview" into a single sentence. The three-sentence structure is mandatory.
+
 Scan data:
 The object \`securityVisibility\` records how much security posture was externally observable; \`overall\` uses internal codes full | partial | limited (in narrative, describe as high / partial / limited security visibility — not scan accuracy or guaranteed safety).
 ${JSON.stringify(
@@ -298,6 +314,7 @@ function extractJson(text: string) {
   const end = text.lastIndexOf("}");
 
   if (start === -1 || end === -1 || end <= start) {
+    console.error("[CLAUDE_DEBUG] Invalid JSON from API. Raw text first 500 chars:", String(text).slice(0, 500));
     throw new Error("invalid_ai_json");
   }
 
@@ -312,9 +329,21 @@ export async function generateSecurityExplanation(
   const localExplanation = generateLocalSecurityExplanation(scanResult);
   const apiKey = getOptionalServerEnv("ANTHROPIC_API_KEY");
 
-  if (!apiKey) {
+  // [SPRINT_7I] Claude API temporarily disabled for UX speed.
+  // The deterministic fallback narrative is fast and complete.
+  // To re-enable: set CLAUDE_API_TEMPORARILY_DISABLED to false (or remove this block).
+  const CLAUDE_API_TEMPORARILY_DISABLED = true;
+  if (CLAUDE_API_TEMPORARILY_DISABLED) {
+    console.log("[SPRINT_7I] Claude API disabled — using fast fallback");
     return localExplanation;
   }
+
+  // --- Original API path (kept for future re-enable) ---
+  if (!apiKey) {
+    console.error("[CLAUDE_DEBUG] No ANTHROPIC_API_KEY found — using fallback");
+    return localExplanation;
+  }
+  console.log("[CLAUDE_DEBUG] API key present, calling Claude API");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
@@ -329,7 +358,7 @@ export async function generateSecurityExplanation(
       },
       body: JSON.stringify({
         model: CLAUDE_MODEL,
-        max_tokens: 1_000,
+        max_tokens: 1_500,
         temperature: 0.1,
         messages: [
           {
@@ -340,6 +369,7 @@ export async function generateSecurityExplanation(
       }),
       signal: controller.signal,
     });
+    console.log("[CLAUDE_DEBUG] API response status:", response.status);
 
     if (!response.ok) {
       return localExplanation;
@@ -356,7 +386,8 @@ export async function generateSecurityExplanation(
     }
 
     return sanitizeExplanation(extractJson(text), localExplanation);
-  } catch {
+  } catch (error) {
+    console.error("[CLAUDE_DEBUG] Claude API call failed:", error instanceof Error ? error.message : String(error));
     return localExplanation;
   } finally {
     clearTimeout(timeout);

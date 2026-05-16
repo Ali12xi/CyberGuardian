@@ -273,7 +273,7 @@ function getExecutiveLine(
   const overview = explanation?.[language].executiveRiskOverview;
 
   if (overview) {
-    return overview.split(language === "ar" ? "。" : ".")[0] + ".";
+    return overview;
   }
 
   if (
@@ -904,7 +904,7 @@ function AIExplanationCard({
 
   const overviewText = useMemo(() => {
     if (selectedExplanation?.executiveRiskOverview) {
-      return firstOverviewSentence(selectedExplanation.executiveRiskOverview);
+      return selectedExplanation.executiveRiskOverview;
     }
     return getExecutiveLine(result, explanation, language, t);
   }, [selectedExplanation, result, explanation, language, t]);
