@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { Cairo, Inter } from "next/font/google";
 import { BRAND, CANONICAL_SITE_URL, VERSION } from "@/lib/brand";
 import { LanguageProvider } from "@/components/LanguageProvider";
@@ -96,6 +97,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <LanguageProvider>{children}</LanguageProvider>
+        <Analytics />
       </body>
     </html>
   );
