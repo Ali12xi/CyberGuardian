@@ -1,0 +1,124 @@
+# CyberGurdian AI — Cursor Rules for V1.7
+
+## Project Identity
+This is CyberGurdian AI — an External Trust Intelligence Platform.
+NOT a scanner. NOT a vulnerability tool. A TRUST INTELLIGENCE PLATFORM.
+
+- Version: V1.7 (in development)
+- Theme: Trust Intelligence + Honest Security + Saudi Compliance Awareness
+- Language: Bilingual (English + Arabic) — both first-class
+- Source of truth for version: lib/brand.ts
+
+## Sacred Filter (apply to EVERY change)
+Before any code change, ask: "Does this increase Trust Clarity?"
+- YES → proceed
+- MAYBE → don't add
+- NO → reject
+
+## Critical Rules
+
+### Rule 1: Server-Only Boundaries
+These MUST have `import "server-only"` at top:
+- lib/scanner.ts
+- lib/claude.ts
+- lib/scanToken.ts
+- lib/validator.ts
+- lib/reputation.ts
+- All files in app/api/
+
+NEVER expose these to client bundle.
+
+### Rule 2: Bilingual Data Model
+All user-facing strings: `{ en: string, ar: string }`
+This includes findings, errors, remediation, UI strings.
+NEVER hardcode English-only strings in user-facing components.
+
+### Rule 3: TypeScript Strict
+- NEVER use `any` or `as any`
+- NEVER use `@ts-ignore` or `@ts-expect-error`
+- Strict mode is non-negotiable
+
+### Rule 4: Scoring Engine is SACRED
+Files in lib/scoring/ are deterministic and audit-grade.
+- DO NOT modify without explicit approval from user
+- DO NOT change scoring weights
+- DO NOT add new scoring categories
+
+### Rule 5: Observable Coverage Philosophy
+"What we cannot see ≠ what is broken."
+- Never penalize sites for what's behind CDN
+- Always distinguish "full" vs "partial" vs "limited" visibility
+
+### Rule 6: Sprint Discipline
+- One sprint at a time
+- No drive-by refactors
+- Whitelist files per task — don't touch unrelated code
+- After every change: tsc --noEmit && npm run lint && npm run build
+
+## Logging — Keep It Simple
+
+When lib/logger.ts is needed, max 20 lines:
+
+const isDev = process.env.NODE_ENV === "development";
+export const logger = {
+  debug: isDev ? console.log : () => {},
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
+
+NO log abstractions. NO transports. NO observability pipelines.
+
+## What NOT to Build in V1.7
+
+FORBIDDEN (belong to V1.8+):
+- User authentication
+- Database persistence
+- Dashboards
+- Teams/workspaces
+- Billing
+- Public shareable report URLs
+- Trust badges
+- Public API
+- Compliance SCORING (only Guidance allowed)
+- Port scanning
+- Sentry / observability platforms (too early)
+- Complex logger abstractions
+
+## Performance Budgets
+
+- Home page First Load JS: < 200 kB after Sprint 1
+- Scan completion: < 15 seconds
+- PDF generation: < 5 seconds
+
+## Quality Gates (before every commit)
+
+1. npx tsc --noEmit → 0 errors
+2. npm run lint → 0 warnings
+3. npm run build → succeeds
+4. Manual smoke test
+
+## When Unsure, ASK
+
+Before doing ANY of these, ASK the user first:
+1. Modifying scoring engine (lib/scoring/)
+2. Changing scan token logic (lib/scanToken.ts)
+3. Touching SSRF validator (lib/validator.ts)
+4. Adding new dependencies (package.json)
+5. Modifying middleware
+6. Changing API contracts
+7. Adding new env variables
+8. Refactoring more than 3 files at once
+
+## Commit Format
+
+<type>: <description>
+
+[Optional WHY]
+
+Sprint: V1.7-S1
+Task: <number>
+
+Types: feat, fix, refactor, docs, test, chore, perf
+
+
