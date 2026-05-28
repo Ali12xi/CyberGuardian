@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { generatePDF } from "@/lib/pdf/v5/index";
 import type { PdfExportMeta } from "@/lib/pdf/phaseB/mapScanResult";
 import type { ScanResult } from "@/lib/types";
 
@@ -51,6 +50,7 @@ export default function DownloadReportButton({
         scanId: scanId !== undefined && scanId !== "" ? scanId : "-",
         scanToken: scanToken !== undefined && scanToken !== "" ? scanToken : "-",
       };
+      const { generatePDF } = await import("@/lib/pdf/v5/index");
       const blob = await generatePDF(result, downloadLocale, meta);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");

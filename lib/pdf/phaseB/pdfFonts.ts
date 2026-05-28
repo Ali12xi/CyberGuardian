@@ -58,7 +58,3 @@ export function ensurePdfFontsRegistered(): void {
 export function getPdfBodyFont(locale: "en" | "ar"): PdfRegisteredLatinFont | PdfRegisteredArabicFont {
   return locale === "ar" ? pdfArabicFont : pdfLatinFont;
 }
-
-if (typeof window !== "undefined") {
-  ensurePdfFontsRegistered();
-}
