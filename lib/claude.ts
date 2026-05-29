@@ -79,11 +79,6 @@ function sanitizeContent(value: unknown, fallback: AIExplanationContent) {
     recommendedSecurityActions:
       actions.length > 0 ? actions : fallback.recommendedSecurityActions,
   };
-  console.log("[CLAUDE_DEBUG] Sanitized field lengths:", {
-    overview: sanitized.executiveRiskOverview?.length ?? 0,
-    attack: sanitized.attackSurfaceAnalysis?.length ?? 0,
-    infra: sanitized.infrastructureTrustAssessment?.length ?? 0,
-  });
   return sanitized;
 }
 
@@ -314,7 +309,7 @@ function extractJson(text: string) {
   const end = text.lastIndexOf("}");
 
   if (start === -1 || end === -1 || end <= start) {
-    console.error("[CLAUDE_DEBUG] Invalid JSON from API. Raw text first 500 chars:", String(text).slice(0, 500));
+    console.error("AI explanation API returned invalid JSON:", String(text).slice(0, 500));
     throw new Error("invalid_ai_json");
   }
 
@@ -334,16 +329,14 @@ export async function generateSecurityExplanation(
   // To re-enable: set CLAUDE_API_TEMPORARILY_DISABLED to false (or remove this block).
   const CLAUDE_API_TEMPORARILY_DISABLED = true;
   if (CLAUDE_API_TEMPORARILY_DISABLED) {
-    console.log("[SPRINT_7I] Claude API disabled — using fast fallback");
     return localExplanation;
   }
 
   // --- Original API path (kept for future re-enable) ---
   if (!apiKey) {
-    console.error("[CLAUDE_DEBUG] No ANTHROPIC_API_KEY found — using fallback");
+    console.error("Anthropic API key not configured, using local fallback");
     return localExplanation;
   }
-  console.log("[CLAUDE_DEBUG] API key present, calling Claude API");
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AI_TIMEOUT_MS);
@@ -369,7 +362,6 @@ export async function generateSecurityExplanation(
       }),
       signal: controller.signal,
     });
-    console.log("[CLAUDE_DEBUG] API response status:", response.status);
 
     if (!response.ok) {
       return localExplanation;
@@ -387,7 +379,7 @@ export async function generateSecurityExplanation(
 
     return sanitizeExplanation(extractJson(text), localExplanation);
   } catch (error) {
-    console.error("[CLAUDE_DEBUG] Claude API call failed:", error instanceof Error ? error.message : String(error));
+    console.error("Claude API call failed:", error instanceof Error ? error.message : String(error));
     return localExplanation;
   } finally {
     clearTimeout(timeout);

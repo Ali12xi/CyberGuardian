@@ -23,7 +23,6 @@ export default function DownloadReportButton({
   scanId,
   scanToken,
 }: DownloadReportButtonProps) {
-  console.log("[PDF V2 Button] result:", result);
   const { setLanguage } = useLanguage();
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [showArNotice, setShowArNotice] = useState(false);
@@ -67,7 +66,7 @@ export default function DownloadReportButton({
       }, 4000);
       setState("idle");
     } catch (error) {
-      console.error("[PDF V2 Button] error:", error);
+      console.error("PDF generation failed:", error);
       setState("error");
     }
   }
