@@ -172,6 +172,7 @@ export type ScanResult = {
     stages: Record<ScanStageName, ScanStageState>;
   };
   findings: Finding[];
+  aiExplanation?: AIExplanation;
 };
 
 export type AIExplanationContent = {
