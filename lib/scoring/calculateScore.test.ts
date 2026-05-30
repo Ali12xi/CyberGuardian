@@ -218,4 +218,119 @@ describe("calculateDeterministicScore — constitutional trust invariants", () =
 
     expect(calculateDeterministicScore(withDifferentTimestamp)).toEqual(first);
   });
+
+  it("Malicious reputation hard-caps trust and sits atop the threat hierarchy", () => {
+    const input: ScanResult = {
+      ...base,
+      // base.reputation is typed ReputationResult | null; it is present in base.
+      reputation: { ...base.reputation!, verdict: "malicious" },
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    expect(result.score).toBeLessThanOrEqual(20);
+    expect(result.grade).toBe("F");
+    expect(result.threatLevel).toBe("critical");
+  });
+
+  it("Anti-fear invariant: suspicious redirect alone is capped at MEDIUM threat", () => {
+    const input: ScanResult = {
+      ...base,
+      redirects: {
+        ...base.redirects,
+        analysis: { ...base.redirects.analysis, intent: "suspicious" },
+      },
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    expect(result.threatLevel).toBe("medium");
+    expect(result.threatLevel).not.toBe("high");
+  });
+
+  it("Trust boundary: critical findings cap score at 60 regardless of healthy signals", () => {
+    // Finding requires only `severity` and `message` (see lib/types.ts).
+    const input: ScanResult = {
+      ...base,
+      findings: [
+        {
+          severity: "critical",
+          message: { en: "Test critical finding", ar: "اختبار" },
+        },
+      ],
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    expect(result.score).toBeLessThanOrEqual(60);
+    expect(result.threatLevel).toBe("critical");
+  });
+
+  it("Anti-fear invariant: high-severity finding alone does NOT imply high threat", () => {
+    const input: ScanResult = {
+      ...base,
+      findings: [
+        {
+          severity: "high",
+          message: { en: "Test high finding", ar: "اختبار" },
+        },
+      ],
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    expect(result.score).toBeLessThanOrEqual(75);
+    expect(result.threatLevel).not.toBe("high");
+  });
+
+  it("Anti-overcompensation: coverage credit bundle never exceeds 16", () => {
+    const input: ScanResult = {
+      ...base,
+      headers: {},
+      meta: {
+        ...base.meta,
+        stages: {
+          ...base.meta.stages,
+          headers: { name: "headers", status: "partial", durationMs: 10 },
+        },
+      },
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    const coverageCreditIds = [
+      "observabilityAwareTransportCredit",
+      "observableEdgeHardening",
+      "edgeManagedHeaderSurface",
+    ];
+    const creditTotal = result.scoreBreakdown.positives
+      .filter((item) => coverageCreditIds.includes(item.id))
+      .reduce((sum, item) => sum + item.value, 0);
+
+    expect(creditTotal).toBeLessThanOrEqual(16);
+  });
+
+  it("Limited observability path degrades gracefully without crashing", () => {
+    const input: ScanResult = {
+      ...base,
+      meta: {
+        ...base.meta,
+        stages: {
+          ...base.meta.stages,
+          tls: { name: "tls", status: "failed", durationMs: 10 },
+          headers: { name: "headers", status: "failed", durationMs: 10 },
+          infrastructure: { name: "infrastructure", status: "failed", durationMs: 10 },
+        },
+      },
+    };
+
+    const result = calculateDeterministicScore(input);
+
+    expect(result.observableCoverage.overall).toBe("limited");
+    expect(result.score).toBeGreaterThanOrEqual(0);
+    expect(result.score).toBeLessThanOrEqual(94);
+
+    const second = calculateDeterministicScore(input);
+    expect(result).toEqual(second);
+  });
 });
