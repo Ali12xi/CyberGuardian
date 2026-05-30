@@ -8,6 +8,10 @@ type RateLimitEntry = {
 const DEFAULT_RATE_LIMIT_REQUESTS = 10;
 const DEFAULT_RATE_LIMIT_WINDOW_SECONDS = 60;
 
+// TODO(Sprint 8 — pre-launch): Replace in-memory Map with Upstash Redis
+// for distributed/persistent rate limiting across serverless instances.
+// Current Map resets on cold start and is per-instance only.
+// At current scale (~16 visits/week), this is acceptable.
 const rateLimitStore = new Map<string, RateLimitEntry>();
 
 const staticAssetPattern =
