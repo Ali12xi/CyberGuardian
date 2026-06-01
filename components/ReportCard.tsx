@@ -1,8 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { CouldntVerifyPanel } from "@/components/CouldntVerifyPanel";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { Language, Translations } from "@/lib/i18n";
+import {
+  explainConfidence,
+  getConfidenceLabel,
+  inferScanConfidence,
+} from "@/lib/confidence/semantics";
+import type {
+  ConfidenceExplanation,
+  ConfidenceLabel,
+  ConfidenceReport,
+} from "@/lib/confidence/types";
 import DownloadReportButton from "@/components/DownloadReportButton";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { getBusinessImpact } from "@/lib/businessImpact";
@@ -1337,8 +1349,17 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
   );
 }
 
-function TechnicalDetails({ result }: { result: ScanResult }) {
-  const { t } = useLanguage();
+function TechnicalDetails({
+  result,
+  headersConfidence,
+}: {
+  result: ScanResult;
+  headersConfidence: {
+    label: ConfidenceLabel;
+    explanation: ConfidenceExplanation;
+  } | null;
+}) {
+  const { language, t } = useLanguage();
   const presentHeaders = Object.entries(result.headers);
   const tlsRows = [
     [t.valid, localizedBoolean(result.ssl.valid, t)],
@@ -1391,7 +1412,18 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7">
-        <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
+          {headersConfidence ? (
+            <div className="shrink-0">
+              <ConfidenceBadge
+                explanation={headersConfidence.explanation}
+                label={headersConfidence.label}
+                language={language}
+              />
+            </div>
+          ) : null}
+        </div>
         <div className="mt-5 grid min-w-0 items-start gap-2 md:grid-cols-2">
           {presentHeaders.map(([header, present]) => (
             <div
@@ -1427,6 +1459,23 @@ export default function ReportCard({
   scanToken,
 }: ReportCardProps) {
   const { language, t } = useLanguage();
+
+  const confidenceReport = useMemo<ConfidenceReport | null>(
+    () => (result ? inferScanConfidence(result) : null),
+    [result],
+  );
+
+  const headersConfidence = useMemo(() => {
+    if (!confidenceReport) {
+      return null;
+    }
+    const dim = confidenceReport.headers;
+    return {
+      label: getConfidenceLabel(dim.state),
+      explanation: explainConfidence("headers", dim),
+    };
+  }, [confidenceReport]);
+
   if (loading) {
     return (
       <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-5 text-center shadow-2xl shadow-cyan-500/10 transition min-[390px]:p-6 sm:p-10">
@@ -1468,6 +1517,7 @@ export default function ReportCard({
         />
       </div>
       <ThreatBanner result={result} explanation={explanation} />
+      {confidenceReport ? <CouldntVerifyPanel report={confidenceReport} /> : null}
       <ScoreBreakdown result={result} />
       <AIExplanationCard
         explanation={explanation}
@@ -1477,7 +1527,7 @@ export default function ReportCard({
       <CriticalFindings result={result} />
       <DomainIntelligence result={result} />
       <ScanTimingLine result={result} />
-      <TechnicalDetails result={result} />
+      <TechnicalDetails headersConfidence={headersConfidence} result={result} />
     </section>
   );
 }
