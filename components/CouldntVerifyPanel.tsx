@@ -4,6 +4,8 @@ import { useLanguage } from "@/components/LanguageProvider";
 import { explainConfidence, getConfidenceLabel } from "@/lib/confidence/semantics";
 import type { ConfidenceContext, ConfidenceReport } from "@/lib/confidence/types";
 
+const TIER_1_STATES = ["masked", "partial", "hidden"] as const;
+
 const PANEL_COPY = {
   title: {
     en: "What We Could Verify",
@@ -12,6 +14,10 @@ const PANEL_COPY = {
   allObserved: {
     en: "Full visibility on scanned surface — all dimensions observed directly.",
     ar: "رؤية كاملة على سطح الفحص — جميع الأبعاد تمت مراقبتها مباشرة.",
+  },
+  inferredHeader: {
+    en: "Additional inferred analysis:",
+    ar: "تحليلات استنتاجية إضافية:",
   },
   contextLabels: {
     headers: { en: "Security Headers", ar: "رؤوس الأمان" },
@@ -43,9 +49,13 @@ type CouldntVerifyPanelProps = {
 export function CouldntVerifyPanel({ report }: CouldntVerifyPanelProps) {
   const { language } = useLanguage();
 
-  const nonObservedDimensions = DISPLAY_ORDER.filter((ctx) => report[ctx].state !== "observed");
+  const tier1Contexts = DISPLAY_ORDER.filter((ctx) =>
+    TIER_1_STATES.includes(report[ctx].state as (typeof TIER_1_STATES)[number]),
+  );
 
-  const allObserved = nonObservedDimensions.length === 0;
+  const tier2Contexts = DISPLAY_ORDER.filter((ctx) => report[ctx].state === "inferred");
+
+  const showCompactReassurance = tier1Contexts.length === 0 && tier2Contexts.length === 0;
 
   return (
     <section
@@ -57,13 +67,15 @@ export function CouldntVerifyPanel({ report }: CouldntVerifyPanelProps) {
         {PANEL_COPY.title[language]}
       </h3>
 
-      {allObserved ? (
+      {showCompactReassurance ? (
         <p className="bidi-safe mt-2 text-start text-sm text-slate-400">
           {PANEL_COPY.allObserved[language]}
         </p>
-      ) : (
+      ) : null}
+
+      {tier1Contexts.length > 0 ? (
         <ul className="mt-3 space-y-2">
-          {nonObservedDimensions.map((ctx) => {
+          {tier1Contexts.map((ctx) => {
             const dim = report[ctx];
             const stateLabel = getConfidenceLabel(dim.state);
             const explanation = explainConfidence(ctx, dim);
@@ -92,7 +104,30 @@ export function CouldntVerifyPanel({ report }: CouldntVerifyPanelProps) {
             );
           })}
         </ul>
-      )}
+      ) : null}
+
+      {tier2Contexts.length > 0 ? (
+        <div className={tier1Contexts.length > 0 ? "mt-4 border-t border-white/5 pt-3" : "mt-3"}>
+          <p className="bidi-safe text-start text-xs text-slate-300">
+            {PANEL_COPY.inferredHeader[language]}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+            {tier2Contexts.map((ctx, idx) => {
+              const contextLabel = PANEL_COPY.contextLabels[ctx];
+
+              return (
+                <span
+                  key={ctx}
+                  className="bidi-safe inline-flex items-center text-xs text-slate-300"
+                >
+                  {idx > 0 ? <span className="me-2 text-slate-500 opacity-50">·</span> : null}
+                  {contextLabel[language]}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
