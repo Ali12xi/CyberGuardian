@@ -1216,7 +1216,16 @@ function DomainSignalBlock({
   );
 }
 
-function DomainIntelligence({ result }: { result: ScanResult }) {
+function DomainIntelligence({
+  result,
+  serverConfidence,
+}: {
+  result: ScanResult;
+  serverConfidence: {
+    label: ConfidenceLabel;
+    explanation: ConfidenceExplanation;
+  } | null;
+}) {
   const { language, t } = useLanguage();
   const reputationBadge = getReputationBadgeText(result, language, t);
   const entropyBand = getEntropyBand(result.intelligence.entropy);
@@ -1341,9 +1350,25 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         ) : (
           <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-300 sm:text-slate-400">{t.noFingerprint}</p>
         )}
-        <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
-          {t.server} {result.meta.server || t.notDisclosed}
-        </p>
+        <div className="mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="bidi-safe min-w-0 text-start">
+              {t.server}{" "}
+              <span dir="ltr" className="break-all">
+                {result.meta.server || t.notDisclosed}
+              </span>
+            </p>
+            {serverConfidence ? (
+              <div className="shrink-0">
+                <ConfidenceBadge
+                  explanation={serverConfidence.explanation}
+                  label={serverConfidence.label}
+                  language={language}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1476,6 +1501,20 @@ export default function ReportCard({
     };
   }, [confidenceReport]);
 
+  const serverConfidence = useMemo(() => {
+    if (!confidenceReport) {
+      return null;
+    }
+    const dim = confidenceReport.server;
+    if (dim.state === "observed" || dim.state === "inferred") {
+      return null;
+    }
+    return {
+      label: getConfidenceLabel(dim.state),
+      explanation: explainConfidence("server", dim),
+    };
+  }, [confidenceReport]);
+
   if (loading) {
     return (
       <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-5 text-center shadow-2xl shadow-cyan-500/10 transition min-[390px]:p-6 sm:p-10">
@@ -1525,7 +1564,7 @@ export default function ReportCard({
         result={result}
       />
       <CriticalFindings result={result} />
-      <DomainIntelligence result={result} />
+      <DomainIntelligence result={result} serverConfidence={serverConfidence} />
       <ScanTimingLine result={result} />
       <TechnicalDetails headersConfidence={headersConfidence} result={result} />
     </section>
