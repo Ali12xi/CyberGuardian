@@ -171,6 +171,54 @@ export function getCategoryColor(id: string, score: number, result: ScanResult):
   return score >= 80 ? "green" : score >= 40 ? "amber" : "red";
 }
 
+const VENDOR_VERDICT_LABELS = {
+  clean: { en: "clean", ar: "نظيف" },
+  suspicious: { en: "suspicious", ar: "مشبوه" },
+  malicious: { en: "malicious", ar: "ضار" },
+  unknown: { en: "unknown", ar: "غير معروف" },
+} as const;
+
+const HEURISTIC_VERDICT_LABELS = {
+  trusted: { en: "trusted", ar: "موثوق" },
+  neutral: { en: "neutral", ar: "محايد" },
+  suspicious: { en: "suspicious", ar: "مشبوه" },
+} as const;
+
+const PATTERN_ANALYSIS_LABEL = {
+  en: "Pattern analysis",
+  ar: "تحليل الأنماط",
+} as const;
+
+const TYPOSQUAT_NOTE = {
+  detected: {
+    en: "Typosquatting signals detected",
+    ar: "إشارات انتحال موجودة",
+  },
+  none: {
+    en: "No typosquatting signals",
+    ar: "لا إشارات انتحال",
+  },
+} as const;
+
+function generateDomainCategoryNote(result: ScanResult, language: Language): string {
+  const parts: string[] = [];
+  const { intelligence, reputation } = result;
+
+  if (reputation) {
+    const vendorLabel = VENDOR_VERDICT_LABELS[reputation.verdict][language];
+    parts.push(`VirusTotal: ${vendorLabel}`);
+  }
+
+  const heuristicLabel = HEURISTIC_VERDICT_LABELS[intelligence.reputation][language];
+  parts.push(`${PATTERN_ANALYSIS_LABEL[language]}: ${heuristicLabel}`);
+
+  parts.push(
+    intelligence.typosquatting ? TYPOSQUAT_NOTE.detected[language] : TYPOSQUAT_NOTE.none[language],
+  );
+
+  return parts.join(" · ");
+}
+
 export function generateCategoryNote(
   id: string,
   result: ScanResult,
@@ -207,33 +255,7 @@ export function generateCategoryNote(
   }
 
   if (id === "domain") {
-    const verdict = result.reputation?.verdict;
-    const intelRep = result.intelligence.reputation;
-    const typo = result.intelligence.typosquatting;
-    if (language === "en") {
-      const repLabel =
-        verdict === "malicious"
-          ? "Malicious reputation"
-          : verdict === "suspicious"
-            ? "Suspicious vendor signals"
-            : intelRep === "trusted"
-              ? "Trusted domain"
-              : intelRep === "suspicious"
-                ? "Suspicious signals"
-                : "Neutral reputation";
-      return `${repLabel}${typo ? " · Typosquatting detected" : " · No typosquatting signals"}`;
-    }
-    const repLabelAr =
-      verdict === "malicious"
-        ? "سمعة خبيثة"
-        : verdict === "suspicious"
-          ? "إشارات مشبوهة من المحركات"
-          : intelRep === "trusted"
-            ? "نطاق موثوق"
-            : intelRep === "suspicious"
-              ? "إشارات مشبوهة"
-              : "سمعة محايدة";
-    return `${repLabelAr}${typo ? " · انتحال هوية مكتشف" : " · لا إشارات انتحال"}`;
+    return generateDomainCategoryNote(result, language);
   }
 
   if (id === "redirects") {
