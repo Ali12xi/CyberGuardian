@@ -29,7 +29,7 @@ import {
 import { DIFFICULTY_LABELS } from "@/lib/findingFixes";
 import { getRemediationById } from "@/lib/remediation";
 import { resolveTechnicalFix } from "@/lib/technicalFixResolver";
-import type { AIExplanation, Finding, ScanResult } from "@/lib/types";
+import type { AIExplanation, Finding, ReputationResult, ScanResult } from "@/lib/types";
 import {
   entropyStatusIcon,
   getEntropyBand,
@@ -1176,6 +1176,30 @@ function intelligenceReputationLabel(
   return "Neutral";
 }
 
+const DUAL_REPUTATION_COPY = {
+  vendorLabel: {
+    en: "Vendor Reputation (VirusTotal)",
+    ar: "سمعة المورد (VirusTotal)",
+  },
+  heuristicLabel: {
+    en: "Domain Pattern Analysis",
+    ar: "تحليل أنماط النطاق",
+  },
+  vendorVerdicts: {
+    clean: { en: "Clean", ar: "نظيف" },
+    suspicious: { en: "Suspicious", ar: "مشبوه" },
+    malicious: { en: "Malicious", ar: "ضار" },
+    unknown: { en: "Unknown", ar: "غير معروف" },
+  },
+} as const;
+
+function vendorReputationIcon(verdict: ReputationResult["verdict"]): "✅" | "⚠️" {
+  if (verdict === "malicious" || verdict === "suspicious") {
+    return "⚠️";
+  }
+  return "✅";
+}
+
 function DomainSignalBlock({
   icon,
   headline,
@@ -1228,22 +1252,19 @@ function DomainIntelligence({
   } | null;
 }) {
   const { language, t } = useLanguage();
-  const reputationBadge = getReputationBadgeText(result, language, t);
   const entropyBand = getEntropyBand(result.intelligence.entropy);
   const entropyIcon = entropyStatusIcon(entropyBand);
-  const repIcon = reputationStatusIcon(result.intelligence.reputation);
+  const heuristicIcon = reputationStatusIcon(result.intelligence.reputation);
   const typoIcon = result.intelligence.typosquatting ? "⚠️" : "✅";
   const tldIcon = result.intelligence.suspiciousTld ? "⚠️" : "✅";
   const punyIcon = result.intelligence.punycode ? "⚠️" : "✅";
 
-  const reputationHeadline = `${t.reputation}: ${intelligenceReputationLabel(result.intelligence.reputation, language)}`;
-  const vendorLine = reputationBadge;
-  const showVendorUnderPuny =
-    Boolean(vendorLine) &&
-    !result.intelligence.punycode &&
-    result.reputation?.verdict === "clean";
-  const reputationFootnote = vendorLine && !showVendorUnderPuny ? vendorLine : null;
-  const punyFootnote = showVendorUnderPuny ? vendorLine : null;
+  const vendorReputation = result.reputation;
+  const vendorEngineLine = vendorReputation
+    ? getReputationBadgeText(result, language, t)
+    : null;
+
+  const heuristicHeadline = `${DUAL_REPUTATION_COPY.heuristicLabel[language]}: ${intelligenceReputationLabel(result.intelligence.reputation, language)}`;
 
   const typosquatHeadline = `${t.typosquatting}: ${
     result.intelligence.typosquatting ? t.likely : t.unlikely
@@ -1273,11 +1294,17 @@ function DomainIntelligence({
           {t.domain}: <span className="font-semibold text-slate-200" dir="ltr">{result.intelligence.domain}</span>
         </p>
         <div className="mt-5 space-y-3">
+          {vendorReputation && vendorEngineLine ? (
+            <DomainSignalBlock
+              explanation={vendorEngineLine}
+              headline={`${DUAL_REPUTATION_COPY.vendorLabel[language]}: ${DUAL_REPUTATION_COPY.vendorVerdicts[vendorReputation.verdict][language]}`}
+              icon={vendorReputationIcon(vendorReputation.verdict)}
+            />
+          ) : null}
           <DomainSignalBlock
             explanation={getReputationExplanation(result, language)}
-            footnote={reputationFootnote}
-            headline={reputationHeadline}
-            icon={repIcon}
+            headline={heuristicHeadline}
+            icon={heuristicIcon}
           />
           <DomainSignalBlock
             explanation={getTyposquattingExplanation(result, language)}
@@ -1291,7 +1318,6 @@ function DomainIntelligence({
           />
           <DomainSignalBlock
             explanation={getPunycodeExplanation(result, language)}
-            footnote={punyFootnote}
             headline={punyHeadline}
             icon={punyIcon}
           />
