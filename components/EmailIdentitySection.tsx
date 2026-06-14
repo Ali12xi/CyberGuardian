@@ -51,20 +51,20 @@ function EmailRow({
 }) {
   const dir = language === "ar" ? "rtl" : "ltr";
   return (
-    <li className="rounded-xl border border-white/10 bg-white/[0.04] p-3 sm:p-4">
+    <li className="min-w-0 rounded-xl border border-white/10 bg-white/[0.04] p-3 sm:p-4">
       <div className="flex items-baseline gap-2">
         <span aria-hidden>{icon}</span>
         <span dir={dir} className="bidi-safe text-start text-sm font-semibold text-white/90">
           {name[language]}
         </span>
       </div>
-      <p dir={dir} className="bidi-safe mt-1 text-start text-sm leading-6 text-slate-300">
+      <p dir={dir} className="bidi-safe mt-1 break-words text-start text-sm leading-6 text-slate-300">
         {explanation}
       </p>
       {footnote ? (
         <p
           dir={dir}
-          className="bidi-safe mt-1 text-start text-xs italic leading-5 text-slate-400"
+          className="bidi-safe mt-1 break-words text-start text-xs italic leading-5 text-slate-400"
         >
           {footnote}
         </p>
@@ -120,12 +120,18 @@ export function EmailIdentitySection({
     <section
       role="region"
       aria-label={SECTION_COPY.title[language]}
-      className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7"
+      className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 shadow-2xl shadow-cyan-500/5 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7"
     >
-      <p className="bidi-safe text-start text-xs font-semibold uppercase tracking-wider text-cyan-300/80">
+      <p
+        dir={dir}
+        className="bidi-safe text-start text-xs font-semibold uppercase tracking-wider text-cyan-300/80"
+      >
         {SECTION_COPY.kicker[language]}
       </p>
-      <h3 className="bidi-safe mt-2 text-start text-xl font-bold text-white">
+      <h3
+        dir={dir}
+        className="bidi-safe mt-2 break-words text-start text-xl font-bold text-white min-[390px]:text-2xl"
+      >
         {SECTION_COPY.title[language]}
       </h3>
 
