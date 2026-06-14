@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
 import { CouldntVerifyPanel } from "@/components/CouldntVerifyPanel";
 import { DetectionSignalsSection } from "@/components/DetectionSignalsSection";
+import { EmailIdentitySection } from "@/components/EmailIdentitySection";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { Language, Translations } from "@/lib/i18n";
 import {
@@ -1592,6 +1593,7 @@ export default function ReportCard({
       />
       <CriticalFindings result={result} />
       <DomainIntelligence result={result} serverConfidence={serverConfidence} />
+      <EmailIdentitySection emailTrust={result.emailTrust} />
       <DetectionSignalsSection detections={result.infrastructure.detections} />
       <ScanTimingLine result={result} />
       <TechnicalDetails headersConfidence={headersConfidence} result={result} />
