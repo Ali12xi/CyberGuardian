@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { CorrelationSection } from "@/components/CorrelationSection";
 import { CouldntVerifyPanel } from "@/components/CouldntVerifyPanel";
 import { DetectionSignalsSection } from "@/components/DetectionSignalsSection";
 import { EmailIdentitySection } from "@/components/EmailIdentitySection";
@@ -1594,6 +1595,7 @@ export default function ReportCard({
       />
       <CriticalFindings result={result} />
       <DomainIntelligence result={result} serverConfidence={serverConfidence} />
+      <CorrelationSection result={result} />
       <EmailIdentitySection emailTrust={result.emailTrust} />
       <SaudiTrustContextSection domain={result.intelligence.domain} emailTrust={result.emailTrust} />
       <DetectionSignalsSection detections={result.infrastructure.detections} />
