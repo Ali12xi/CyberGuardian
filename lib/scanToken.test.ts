@@ -49,7 +49,7 @@ describe("scanToken — bounded authority delegation", () => {
   it("Tampered signature is rejected with signature reason", () => {
     const token = generateScanToken("scan-1", baseResult);
     const [encoded, sig] = token.split(".");
-    const tampered = `${encoded}.${sig.slice(0, -1)}X`;
+    const tampered = `${encoded}.${sig.slice(0, Math.floor(sig.length / 2))}${sig[Math.floor(sig.length / 2)] === "A" ? "B" : "A"}${sig.slice(Math.floor(sig.length / 2) + 1)}`;
 
     const result = verifyScanToken(tampered, baseResult);
 
