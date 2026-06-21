@@ -72,11 +72,11 @@ export const TRACKED_HEADERS = [
   "permissions-policy",
 ] as const;
 
-export const BRAND_NAME = "CyberGurdian AI";
+export const BRAND_NAME = "CyberGuardian AI";
 export const BRAND_TAGLINE_EN = "Security Intelligence Report";
 export const BRAND_TAGLINE_AR = "\u062a\u0642\u0631\u064a\u0631 \u0630\u0643\u0627\u0621 \u0623\u0645\u0646\u064a";
-export const BRAND_FOOTER_EN = "CyberGurdian AI \u00a9 2026 \u00b7 V1.6";
-export const BRAND_FOOTER_AR = "CyberGurdian AI \u00a9 2026 \u00b7 V1.6";
+export const BRAND_FOOTER_EN = "CyberGuardian AI \u00a9 2026 \u00b7 V1.7";
+export const BRAND_FOOTER_AR = "CyberGuardian AI \u00a9 2026 \u00b7 V1.7";
 
 export const SEVERITY_STYLES = {
   critical: {

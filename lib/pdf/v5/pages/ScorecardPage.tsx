@@ -375,7 +375,7 @@ export function ScorecardPageV5({ data }: { data: PdfReportDataV5 }) {
         {isAr ? (
           <View style={{ flexDirection: "row", alignItems: "center", flexWrap: "wrap", marginBottom: 28 }} wrap={false}>
             <LtrText
-              value={"CyberGurdian AI · "}
+              value={"CyberGuardian AI · "}
               style={[{ fontSize: 8, fontWeight: 700, color: colors.brandCyan, letterSpacing: 0.35 }, bf("en")]}
             />
             <View style={{ direction: "rtl" }} wrap={false}>

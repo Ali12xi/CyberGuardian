@@ -3,11 +3,11 @@
  * Safe to import from client or server (no server-only).
  */
 
-export const BRAND = "CyberGurdian AI";
+export const BRAND = "CyberGuardian AI";
 
-export const ENGINE_NAME = "CyberGurdian Intelligence Engine";
+export const ENGINE_NAME = "CyberGuardian Intelligence Engine";
 
-export const VERSION = "V1.6";
+export const VERSION = "V1.7";
 
 export const CANONICAL_SITE_URL = "https://www.cybergurdianai.com/";
 

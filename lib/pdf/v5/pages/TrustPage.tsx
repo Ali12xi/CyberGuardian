@@ -102,7 +102,7 @@ export function TrustPageV5({ data }: { data: PdfReportDataV5 }) {
             "ملاحظة خارجية فقط. ليس اختبار اختراق ولا استشارة قانونية.",
           )}
         </Text>
-        <Text style={[s.copy, bf(locale)]}>{`CyberGurdian AI © 2026 · ${VERSION}`}</Text>
+        <Text style={[s.copy, bf(locale)]}>{`CyberGuardian AI © 2026 · ${VERSION}`}</Text>
       </View>
       <FixedPageFooterV5 locale={locale} />
     </Page>

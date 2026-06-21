@@ -14,7 +14,7 @@ const CONTENT = {
     eyebrow: "Contact",
     title: "Security Collaboration",
     subtitle:
-      "CyberGurdian operates at the intersection of intelligence and infrastructure. We engage with security researchers, engineers, and institutions building toward a more defensible web.",
+      "CyberGuardian operates at the intersection of intelligence and infrastructure. We engage with security researchers, engineers, and institutions building toward a more defensible web.",
     intro:
       "Review the platform's public codebase, open issues, and contribution guidelines.",
     collaborationTitle: "Security Contact",
@@ -33,7 +33,7 @@ const CONTENT = {
     eyebrow: "تواصل",
     title: "التعاون الأمني",
     subtitle:
-      "يعمل CyberGurdian عند تقاطع الاستخبارات والبنية التحتية. نتعاون مع باحثي الأمن والمهندسين والمؤسسات الساعية إلى بناء ويب أكثر قابلية للدفاع.",
+      "يعمل CyberGuardian عند تقاطع الاستخبارات والبنية التحتية. نتعاون مع باحثي الأمن والمهندسين والمؤسسات الساعية إلى بناء ويب أكثر قابلية للدفاع.",
     intro:
       "استعرض قاعدة الكود العامة للمنصة، والمشكلات المفتوحة، وإرشادات المساهمة.",
     collaborationTitle: "التواصل الأمني",
