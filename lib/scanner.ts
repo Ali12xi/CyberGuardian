@@ -7,6 +7,7 @@ import {
   mergeRedirectIntent,
   type RedirectAnalysisFlags,
 } from "@/lib/redirectAnalysis";
+import { generateLocalSecurityExplanation } from "@/lib/claude";
 import { checkDomainReputation } from "@/lib/reputation";
 import { calculateDeterministicScore as calculateFinalScore } from "@/lib/scoring/calculateScore";
 import type {
@@ -729,6 +730,25 @@ function finalizeScore(result: ScanResult) {
   result.scoreBreakdown = scoring.scoreBreakdown;
   result.observableCoverage = scoring.observableCoverage;
   result.findings = removeFindingRecommendationOverlaps(result);
+
+  // Deterministic narrative synthesis — runs locally, no LLM call.
+  // Marks the aiSummary stage as truly completed so meta.stages reflects
+  // real pipeline work instead of staying "pending" forever.
+  const narrativeStartedAt = Date.now();
+  try {
+    const explanation = generateLocalSecurityExplanation(result);
+    result.aiExplanation = explanation;
+    updateStage(result, "aiSummary", "completed", narrativeStartedAt);
+  } catch (error) {
+    updateStage(
+      result,
+      "aiSummary",
+      "failed",
+      narrativeStartedAt,
+      error instanceof Error ? error.message : "narrative_generation_failed",
+    );
+  }
+
   result.deterministicHash = generateDeterministicHash(result);
 
   return Object.freeze(result);

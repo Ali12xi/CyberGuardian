@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import PublicShell from "@/components/PublicShell";
 
 export const metadata: Metadata = {
-  title: "Privacy & Usage — CyberGurdian AI Cybersecurity Intelligence Platform",
+  title: "Privacy & Usage — CyberGuardian AI Cybersecurity Intelligence Platform",
   description:
-    "How CyberGurdian handles data: publicly observable signals only, no credential collection, responsible use policy, and scan limitations.",
+    "How CyberGuardian handles data: publicly observable signals only, no credential collection, responsible use policy, and scan limitations.",
 };
 
 const CONTACT_EMAIL = "cybergurdianai@gmail.com";
@@ -14,21 +14,21 @@ const CONTENT = {
     eyebrow: "Legal & Transparency",
     title: "Privacy & Usage",
     subtitle:
-      "How CyberGurdian works, what it analyzes, and how results should be interpreted.",
+      "How CyberGuardian works, what it analyzes, and how results should be interpreted.",
     closing:
-      "This policy may evolve as CyberGurdian expands its capabilities and infrastructure.",
+      "This policy may evolve as CyberGuardian expands its capabilities and infrastructure.",
     sections: [
       {
-        title: "What CyberGurdian Analyzes",
-        body: "CyberGurdian assesses the externally observable security posture of domains and web infrastructure. This includes TLS configuration, HTTP security headers, redirect behavior, DNS records, and other signals that are publicly accessible without authentication.",
+        title: "What CyberGuardian Analyzes",
+        body: "CyberGuardian assesses the externally observable security posture of domains and web infrastructure. This includes TLS configuration, HTTP security headers, redirect behavior, DNS records, and other signals that are publicly accessible without authentication.",
       },
       {
         title: "Publicly Observable Data Only",
-        body: "All analysis is performed on data that is openly available on the public internet. CyberGurdian does not access private systems, internal networks, or any data that requires credentials or authorization to retrieve.",
+        body: "All analysis is performed on data that is openly available on the public internet. CyberGuardian does not access private systems, internal networks, or any data that requires credentials or authorization to retrieve.",
       },
       {
         title: "No Credential Collection",
-        body: "CyberGurdian does not collect, store, or process usernames, passwords, API keys, or any form of authentication credentials — neither from the entities being assessed nor from users of the platform.",
+        body: "CyberGuardian does not collect, store, or process usernames, passwords, API keys, or any form of authentication credentials — neither from the entities being assessed nor from users of the platform.",
       },
       {
         title: "External Intelligence Sources",
@@ -40,31 +40,31 @@ const CONTENT = {
       },
       {
         title: "Responsible Use",
-        body: "CyberGurdian is designed for legitimate security research, procurement due diligence, and organizational risk assessment. Use of the platform to facilitate attacks, harassment, or unauthorized surveillance is strictly prohibited.",
+        body: "CyberGuardian is designed for legitimate security research, procurement due diligence, and organizational risk assessment. Use of the platform to facilitate attacks, harassment, or unauthorized surveillance is strictly prohibited.",
       },
       {
         title: "Contact",
-        body: "For questions about this policy or platform behavior, contact the CyberGurdian security team directly.",
+        body: "For questions about this policy or platform behavior, contact the CyberGuardian security team directly.",
       },
     ],
   },
   ar: {
     eyebrow: "الشفافية والاستخدام",
     title: "الخصوصية والاستخدام",
-    subtitle: "كيف يعمل CyberGurdian، وما الذي يحلله، وكيف ينبغي تفسير النتائج.",
-    closing: "قد تتطور هذه السياسة مع توسع قدرات CyberGurdian وبنيته التحتية.",
+    subtitle: "كيف يعمل CyberGuardian، وما الذي يحلله، وكيف ينبغي تفسير النتائج.",
+    closing: "قد تتطور هذه السياسة مع توسع قدرات CyberGuardian وبنيته التحتية.",
     sections: [
       {
-        title: "ما الذي يحلله CyberGurdian",
-        body: "يقيّم CyberGurdian الوضعية الأمنية الخارجية القابلة للرصد للنطاقات والبنية التحتية للويب. يشمل ذلك إعدادات TLS، ورؤوس أمان HTTP، وسلوك إعادة التوجيه، وسجلات DNS، وغيرها من الإشارات المتاحة للعموم دون الحاجة إلى مصادقة.",
+        title: "ما الذي يحلله CyberGuardian",
+        body: "يقيّم CyberGuardian الوضعية الأمنية الخارجية القابلة للرصد للنطاقات والبنية التحتية للويب. يشمل ذلك إعدادات TLS، ورؤوس أمان HTTP، وسلوك إعادة التوجيه، وسجلات DNS، وغيرها من الإشارات المتاحة للعموم دون الحاجة إلى مصادقة.",
       },
       {
         title: "بيانات عامة فقط",
-        body: "يُجرى جميع التحليل على بيانات متاحة على الإنترنت العام. لا يصل CyberGurdian إلى الأنظمة الخاصة، أو الشبكات الداخلية، أو أي بيانات تستلزم بيانات اعتماد أو تفويضاً للوصول إليها.",
+        body: "يُجرى جميع التحليل على بيانات متاحة على الإنترنت العام. لا يصل CyberGuardian إلى الأنظمة الخاصة، أو الشبكات الداخلية، أو أي بيانات تستلزم بيانات اعتماد أو تفويضاً للوصول إليها.",
       },
       {
         title: "لا جمع لبيانات الاعتماد",
-        body: "لا يجمع CyberGurdian أسماء المستخدمين أو كلمات المرور أو مفاتيح API أو أي شكل من أشكال بيانات الاعتماد — لا من الجهات الخاضعة للتقييم، ولا من مستخدمي المنصة.",
+        body: "لا يجمع CyberGuardian أسماء المستخدمين أو كلمات المرور أو مفاتيح API أو أي شكل من أشكال بيانات الاعتماد — لا من الجهات الخاضعة للتقييم، ولا من مستخدمي المنصة.",
       },
       {
         title: "مصادر الاستخبارات الخارجية",
@@ -76,11 +76,11 @@ const CONTENT = {
       },
       {
         title: "الاستخدام المسؤول",
-        body: "صُمِّم CyberGurdian للبحث الأمني المشروع، والعناية الواجبة في المشتريات، وتقييم المخاطر المؤسسية. يُحظر صراحةً استخدام المنصة لتسهيل الهجمات، أو التحرش، أو المراقبة غير المصرح بها.",
+        body: "صُمِّم CyberGuardian للبحث الأمني المشروع، والعناية الواجبة في المشتريات، وتقييم المخاطر المؤسسية. يُحظر صراحةً استخدام المنصة لتسهيل الهجمات، أو التحرش، أو المراقبة غير المصرح بها.",
       },
       {
         title: "التواصل",
-        body: "للاستفسار عن هذه السياسة أو سلوك المنصة، تواصل مع فريق أمن CyberGurdian مباشرةً.",
+        body: "للاستفسار عن هذه السياسة أو سلوك المنصة، تواصل مع فريق أمن CyberGuardian مباشرةً.",
       },
     ],
   },

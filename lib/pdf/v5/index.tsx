@@ -14,6 +14,7 @@ export async function generatePDF(
     throw new Error("PDF export is available only in the browser.");
   }
 
+  // Ensure fonts are registered (was module-level side effect, now explicit)
   ensurePdfFontsRegistered();
 
   const data = await buildPdfReportDataV5(result, locale, meta);

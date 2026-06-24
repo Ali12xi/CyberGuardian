@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import { generatePDF } from "@/lib/pdf/v5/index";
 import type { PdfExportMeta } from "@/lib/pdf/phaseB/mapScanResult";
 import type { ScanResult } from "@/lib/types";
 
@@ -24,7 +23,6 @@ export default function DownloadReportButton({
   scanId,
   scanToken,
 }: DownloadReportButtonProps) {
-  console.log("[PDF V2 Button] result:", result);
   const { setLanguage } = useLanguage();
   const [state, setState] = useState<"idle" | "loading" | "error">("idle");
   const [showArNotice, setShowArNotice] = useState(false);
@@ -51,6 +49,7 @@ export default function DownloadReportButton({
         scanId: scanId !== undefined && scanId !== "" ? scanId : "-",
         scanToken: scanToken !== undefined && scanToken !== "" ? scanToken : "-",
       };
+      const { generatePDF } = await import("@/lib/pdf/v5/index");
       const blob = await generatePDF(result, downloadLocale, meta);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -67,7 +66,7 @@ export default function DownloadReportButton({
       }, 4000);
       setState("idle");
     } catch (error) {
-      console.error("[PDF V2 Button] error:", error);
+      console.error("PDF generation failed:", error);
       setState("error");
     }
   }

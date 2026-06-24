@@ -111,6 +111,30 @@ export type ObservableCoverage = {
   overall: "full" | "partial" | "limited";
 };
 
+export type EmailTrustIntelligence = {
+  spf: {
+    record: string | null;
+    observed: boolean;
+  };
+  dkim: {
+    selectorsChecked: number;
+    selectorsFound: string[];
+  };
+  dmarc: {
+    record: string | null;
+    policy: "none" | "quarantine" | "reject" | null;
+    observed: boolean;
+  };
+  dnssec: {
+    dnskeyObserved: boolean | null;
+  };
+  securityTxt: {
+    fileFound: boolean | null;
+    expires: string | null;
+  };
+  hasEmailSurface: boolean;
+};
+
 export type ScanResult = {
   score: number;
   grade: Grade;
@@ -172,6 +196,8 @@ export type ScanResult = {
     stages: Record<ScanStageName, ScanStageState>;
   };
   findings: Finding[];
+  aiExplanation?: AIExplanation;
+  emailTrust?: EmailTrustIntelligence;
 };
 
 export type AIExplanationContent = {

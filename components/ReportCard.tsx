@@ -1,8 +1,24 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { ConfidenceBadge } from "@/components/ConfidenceBadge";
+import { CorrelationSection } from "@/components/CorrelationSection";
+import { CouldntVerifyPanel } from "@/components/CouldntVerifyPanel";
+import { DetectionSignalsSection } from "@/components/DetectionSignalsSection";
+import { EmailIdentitySection } from "@/components/EmailIdentitySection";
+import { SaudiTrustContextSection } from "@/components/SaudiTrustContextSection";
 import { useLanguage } from "@/components/LanguageProvider";
 import type { Language, Translations } from "@/lib/i18n";
+import {
+  explainConfidence,
+  getConfidenceLabel,
+  inferScanConfidence,
+} from "@/lib/confidence/semantics";
+import type {
+  ConfidenceExplanation,
+  ConfidenceLabel,
+  ConfidenceReport,
+} from "@/lib/confidence/types";
 import DownloadReportButton from "@/components/DownloadReportButton";
 import { ScoreBreakdown } from "@/components/ScoreBreakdown";
 import { getBusinessImpact } from "@/lib/businessImpact";
@@ -16,7 +32,7 @@ import {
 import { DIFFICULTY_LABELS } from "@/lib/findingFixes";
 import { getRemediationById } from "@/lib/remediation";
 import { resolveTechnicalFix } from "@/lib/technicalFixResolver";
-import type { AIExplanation, Finding, ScanResult } from "@/lib/types";
+import type { AIExplanation, Finding, ReputationResult, ScanResult } from "@/lib/types";
 import {
   entropyStatusIcon,
   getEntropyBand,
@@ -1163,6 +1179,30 @@ function intelligenceReputationLabel(
   return "Neutral";
 }
 
+const DUAL_REPUTATION_COPY = {
+  vendorLabel: {
+    en: "Vendor Reputation (VirusTotal)",
+    ar: "سمعة المورد (VirusTotal)",
+  },
+  heuristicLabel: {
+    en: "Domain Pattern Analysis",
+    ar: "تحليل أنماط النطاق",
+  },
+  vendorVerdicts: {
+    clean: { en: "Clean", ar: "نظيف" },
+    suspicious: { en: "Suspicious", ar: "مشبوه" },
+    malicious: { en: "Malicious", ar: "ضار" },
+    unknown: { en: "Unknown", ar: "غير معروف" },
+  },
+} as const;
+
+function vendorReputationIcon(verdict: ReputationResult["verdict"]): "✅" | "⚠️" {
+  if (verdict === "malicious" || verdict === "suspicious") {
+    return "⚠️";
+  }
+  return "✅";
+}
+
 function DomainSignalBlock({
   icon,
   headline,
@@ -1204,24 +1244,30 @@ function DomainSignalBlock({
   );
 }
 
-function DomainIntelligence({ result }: { result: ScanResult }) {
+function DomainIntelligence({
+  result,
+  serverConfidence,
+}: {
+  result: ScanResult;
+  serverConfidence: {
+    label: ConfidenceLabel;
+    explanation: ConfidenceExplanation;
+  } | null;
+}) {
   const { language, t } = useLanguage();
-  const reputationBadge = getReputationBadgeText(result, language, t);
   const entropyBand = getEntropyBand(result.intelligence.entropy);
   const entropyIcon = entropyStatusIcon(entropyBand);
-  const repIcon = reputationStatusIcon(result.intelligence.reputation);
+  const heuristicIcon = reputationStatusIcon(result.intelligence.reputation);
   const typoIcon = result.intelligence.typosquatting ? "⚠️" : "✅";
   const tldIcon = result.intelligence.suspiciousTld ? "⚠️" : "✅";
   const punyIcon = result.intelligence.punycode ? "⚠️" : "✅";
 
-  const reputationHeadline = `${t.reputation}: ${intelligenceReputationLabel(result.intelligence.reputation, language)}`;
-  const vendorLine = reputationBadge;
-  const showVendorUnderPuny =
-    Boolean(vendorLine) &&
-    !result.intelligence.punycode &&
-    result.reputation?.verdict === "clean";
-  const reputationFootnote = vendorLine && !showVendorUnderPuny ? vendorLine : null;
-  const punyFootnote = showVendorUnderPuny ? vendorLine : null;
+  const vendorReputation = result.reputation;
+  const vendorEngineLine = vendorReputation
+    ? getReputationBadgeText(result, language, t)
+    : null;
+
+  const heuristicHeadline = `${DUAL_REPUTATION_COPY.heuristicLabel[language]}: ${intelligenceReputationLabel(result.intelligence.reputation, language)}`;
 
   const typosquatHeadline = `${t.typosquatting}: ${
     result.intelligence.typosquatting ? t.likely : t.unlikely
@@ -1251,11 +1297,17 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
           {t.domain}: <span className="font-semibold text-slate-200" dir="ltr">{result.intelligence.domain}</span>
         </p>
         <div className="mt-5 space-y-3">
+          {vendorReputation && vendorEngineLine ? (
+            <DomainSignalBlock
+              explanation={vendorEngineLine}
+              headline={`${DUAL_REPUTATION_COPY.vendorLabel[language]}: ${DUAL_REPUTATION_COPY.vendorVerdicts[vendorReputation.verdict][language]}`}
+              icon={vendorReputationIcon(vendorReputation.verdict)}
+            />
+          ) : null}
           <DomainSignalBlock
             explanation={getReputationExplanation(result, language)}
-            footnote={reputationFootnote}
-            headline={reputationHeadline}
-            icon={repIcon}
+            headline={heuristicHeadline}
+            icon={heuristicIcon}
           />
           <DomainSignalBlock
             explanation={getTyposquattingExplanation(result, language)}
@@ -1269,7 +1321,6 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
           />
           <DomainSignalBlock
             explanation={getPunycodeExplanation(result, language)}
-            footnote={punyFootnote}
             headline={punyHeadline}
             icon={punyIcon}
           />
@@ -1329,16 +1380,41 @@ function DomainIntelligence({ result }: { result: ScanResult }) {
         ) : (
           <p className="bidi-safe mt-5 text-start text-sm leading-7 text-slate-300 sm:text-slate-400">{t.noFingerprint}</p>
         )}
-        <p className="bidi-safe mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-start text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
-          {t.server} {result.meta.server || t.notDisclosed}
-        </p>
+        <div className="mt-5 overflow-hidden break-words rounded-2xl border border-white/10 bg-white/[0.07] p-4 text-sm leading-7 text-slate-200 min-[390px]:p-5 sm:bg-white/[0.04] sm:text-slate-300">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="bidi-safe min-w-0 text-start">
+              {t.server}{" "}
+              <span dir="ltr" className="break-all">
+                {result.meta.server || t.notDisclosed}
+              </span>
+            </p>
+            {serverConfidence ? (
+              <div className="shrink-0">
+                <ConfidenceBadge
+                  explanation={serverConfidence.explanation}
+                  label={serverConfidence.label}
+                  language={language}
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function TechnicalDetails({ result }: { result: ScanResult }) {
-  const { t } = useLanguage();
+function TechnicalDetails({
+  result,
+  headersConfidence,
+}: {
+  result: ScanResult;
+  headersConfidence: {
+    label: ConfidenceLabel;
+    explanation: ConfidenceExplanation;
+  } | null;
+}) {
+  const { language, t } = useLanguage();
   const presentHeaders = Object.entries(result.headers);
   const tlsRows = [
     [t.valid, localizedBoolean(result.ssl.valid, t)],
@@ -1391,7 +1467,18 @@ function TechnicalDetails({ result }: { result: ScanResult }) {
       </div>
 
       <div className="rounded-[2rem] border border-white/10 bg-slate-950/90 p-4 min-[390px]:p-5 sm:bg-slate-950/80 md:p-7">
-        <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="bidi-safe text-start text-xl font-bold text-white">{t.securityHeaders}</h3>
+          {headersConfidence ? (
+            <div className="shrink-0">
+              <ConfidenceBadge
+                explanation={headersConfidence.explanation}
+                label={headersConfidence.label}
+                language={language}
+              />
+            </div>
+          ) : null}
+        </div>
         <div className="mt-5 grid min-w-0 items-start gap-2 md:grid-cols-2">
           {presentHeaders.map(([header, present]) => (
             <div
@@ -1427,6 +1514,37 @@ export default function ReportCard({
   scanToken,
 }: ReportCardProps) {
   const { language, t } = useLanguage();
+
+  const confidenceReport = useMemo<ConfidenceReport | null>(
+    () => (result ? inferScanConfidence(result) : null),
+    [result],
+  );
+
+  const headersConfidence = useMemo(() => {
+    if (!confidenceReport) {
+      return null;
+    }
+    const dim = confidenceReport.headers;
+    return {
+      label: getConfidenceLabel(dim.state),
+      explanation: explainConfidence("headers", dim),
+    };
+  }, [confidenceReport]);
+
+  const serverConfidence = useMemo(() => {
+    if (!confidenceReport) {
+      return null;
+    }
+    const dim = confidenceReport.server;
+    if (dim.state === "observed" || dim.state === "inferred") {
+      return null;
+    }
+    return {
+      label: getConfidenceLabel(dim.state),
+      explanation: explainConfidence("server", dim),
+    };
+  }, [confidenceReport]);
+
   if (loading) {
     return (
       <section className="rounded-[2.5rem] border border-cyan-400/20 bg-slate-950/90 p-5 text-center shadow-2xl shadow-cyan-500/10 transition min-[390px]:p-6 sm:p-10">
@@ -1468,6 +1586,7 @@ export default function ReportCard({
         />
       </div>
       <ThreatBanner result={result} explanation={explanation} />
+      {confidenceReport ? <CouldntVerifyPanel report={confidenceReport} /> : null}
       <ScoreBreakdown result={result} />
       <AIExplanationCard
         explanation={explanation}
@@ -1475,9 +1594,13 @@ export default function ReportCard({
         result={result}
       />
       <CriticalFindings result={result} />
-      <DomainIntelligence result={result} />
+      <DomainIntelligence result={result} serverConfidence={serverConfidence} />
+      <CorrelationSection result={result} />
+      <EmailIdentitySection emailTrust={result.emailTrust} />
+      <SaudiTrustContextSection domain={result.intelligence.domain} emailTrust={result.emailTrust} />
+      <DetectionSignalsSection detections={result.infrastructure.detections} />
       <ScanTimingLine result={result} />
-      <TechnicalDetails result={result} />
+      <TechnicalDetails headersConfidence={headersConfidence} result={result} />
     </section>
   );
 }

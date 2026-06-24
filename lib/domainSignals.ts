@@ -8,16 +8,16 @@ const REPUTATION_COPY: Record<
   { en: string; ar: string }
 > = {
   trusted: {
-    en: "Domain has a positive reputation across intelligence sources.",
-    ar: "النطاق يتمتع بسمعة إيجابية عبر مصادر الاستخبارات.",
-  },
-  suspicious: {
-    en: "Intelligence signals indicate unusual patterns. Review before trusting this domain.",
-    ar: "إشارات استخباراتية تشير لأنماط غير عادية. راجع قبل الثقة بهذا النطاق.",
+    en: "Domain pattern analysis shows no concerning signals.",
+    ar: "تحليل أنماط النطاق لا يُظهر إشارات مقلقة.",
   },
   neutral: {
-    en: "No strong positive or negative reputation signals detected.",
-    ar: "لا توجد إشارات سمعة قوية إيجابية أو سلبية.",
+    en: "Domain pattern analysis shows no concerning signals from local heuristics.",
+    ar: "تحليل أنماط النطاق لا يُظهر إشارات مقلقة من التحليل المحلي.",
+  },
+  suspicious: {
+    en: "Domain pattern analysis detected concerning patterns. Review related signals below.",
+    ar: "تحليل أنماط النطاق رصد أنماطًا مقلقة. راجع الإشارات ذات الصلة أدناه.",
   },
 };
 

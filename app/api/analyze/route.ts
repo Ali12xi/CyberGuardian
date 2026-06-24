@@ -1,10 +1,25 @@
 import { randomUUID } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { collectEmailTrust } from "@/lib/emailIntelligence";
 import { generateScanToken } from "@/lib/scanToken";
 import { scanUrl } from "@/lib/scanner";
 import { validateUrl } from "@/lib/validator";
 import { translations } from "@/lib/i18n";
 import type { AnalyzeApiResponse } from "@/lib/types";
+
+// Email collection is observational and must never fail a scan. Any failure
+// resolves to undefined so EmailIdentitySection stays silent.
+async function collectEmailTrustSafe(domain: string) {
+  if (!domain) {
+    return undefined;
+  }
+
+  try {
+    return await collectEmailTrust(domain);
+  } catch {
+    return undefined;
+  }
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,12 +83,18 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await scanUrl(validation.url);
+    // Registrable apex domain (e.g. "microsoftonline.com"), computed by the
+    // scanner — SPF/DMARC live on the apex, so this must not be a subdomain.
+    const domain = result.intelligence.domain;
+    const emailTrust = await collectEmailTrustSafe(domain);
+    // result is frozen by the scanner; spread yields a fresh, mutable object.
+    const resultWithEmail = { ...result, emailTrust };
     const scanId = randomUUID();
 
     let scanToken: string;
 
     try {
-      scanToken = generateScanToken(scanId, result);
+      scanToken = generateScanToken(scanId, resultWithEmail);
     } catch (error) {
       console.error(
         "[analyze] Scan token generation failed",
@@ -88,7 +109,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return NextResponse.json<AnalyzeApiResponse>({ ok: true, result, scanId, scanToken });
+    return NextResponse.json<AnalyzeApiResponse>({
+      ok: true,
+      result: resultWithEmail,
+      scanId,
+      scanToken,
+    });
   } catch {
     return errorResponse(GENERIC_ERROR, 500);
   }

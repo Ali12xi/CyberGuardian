@@ -16,7 +16,7 @@ const cairo = Cairo({
 });
 
 const siteDescription =
-  "CyberGurdian AI is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.";
+  "CyberGuardian AI is an AI-powered cybersecurity intelligence platform for human-readable threat insights, deterministic website security scanning, and executive-grade reporting.";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -52,7 +52,7 @@ const jsonLd = {
 export const metadata: Metadata = {
   metadataBase: new URL(CANONICAL_SITE_URL),
   title: {
-    default: "CyberGurdian AI — Cybersecurity Intelligence Platform",
+    default: "CyberGuardian AI — Cybersecurity Intelligence Platform",
     template: `%s | ${BRAND}`,
   },
   description: siteDescription,
@@ -61,9 +61,9 @@ export const metadata: Metadata = {
     canonical: CANONICAL_SITE_URL,
   },
   openGraph: {
-    title: "CyberGurdian AI — Cybersecurity Intelligence Platform",
+    title: "CyberGuardian AI — Cybersecurity Intelligence Platform",
     description:
-      "CyberGurdian AI delivers AI-powered website security scanning, cybersecurity intelligence, and executive-grade reporting.",
+      "CyberGuardian AI delivers AI-powered website security scanning, cybersecurity intelligence, and executive-grade reporting.",
     siteName: BRAND,
     type: "website",
     url: CANONICAL_SITE_URL,
@@ -71,9 +71,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "CyberGurdian AI — Cybersecurity Intelligence Platform",
+    title: "CyberGuardian AI — Cybersecurity Intelligence Platform",
     description:
-      "CyberGurdian AI — human-readable cybersecurity intelligence, deterministic website security scanning, and executive-grade reporting.",
+      "CyberGuardian AI — human-readable cybersecurity intelligence, deterministic website security scanning, and executive-grade reporting.",
   },
   robots: {
     index: true,

@@ -238,7 +238,7 @@ export const translations: Record<Language, Translations> = {
   en: {
     languageName: "English",
     languageToggle: "العربية",
-    brand: "CyberGurdian AI",
+    brand: "CyberGuardian AI",
     heroVersion: VERSION,
     heroVersionLabel: "Smart Protection System",
     heroTitle: "AI-Powered Security Intelligence",
@@ -258,7 +258,7 @@ export const translations: Record<Language, Translations> = {
       {
         title: "Smart Analysis",
         description:
-          "CyberGurdian AI analyzes headers, SSL, and security posture.",
+          "CyberGuardian AI analyzes headers, SSL, and security posture.",
       },
       {
         title: "Security Report",
@@ -492,12 +492,12 @@ export const translations: Record<Language, Translations> = {
     metadataExposure: "Metadata exposure",
     footerEngineeredBy: "Engineered by Ali",
     footerVersion: VERSION,
-    footerCopyright: "© 2026 CyberGurdian AI",
+    footerCopyright: "© 2026 CyberGuardian AI",
   },
   ar: {
     languageName: "العربية",
     languageToggle: "English",
-    brand: "CyberGurdian AI",
+    brand: "CyberGuardian AI",
     heroVersion: VERSION,
     heroVersionLabel: "نظام الحماية الذكي",
     heroTitle: "تحليلات أمنية ذكية",
@@ -746,7 +746,7 @@ export const translations: Record<Language, Translations> = {
     metadataExposure: "تعرض البيانات الوصفية",
     footerEngineeredBy: "تمت هندسته بواسطة علي",
     footerVersion: VERSION,
-    footerCopyright: "© 2026 CyberGurdian AI",
+    footerCopyright: "© 2026 CyberGuardian AI",
   },
 };
 
